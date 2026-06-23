@@ -1,0 +1,387 @@
+<!-- TATUA · Register — Formulario multi-paso -->
+<div class="reg-page">
+
+  <header class="reg-header">
+    <a class="reg-logo" routerLink="/">TATUA</a>
+    <span class="reg-header__sub">Crea tu perfil de artista</span>
+  </header>
+
+  <!-- Progress bar -->
+  <div class="reg-progress">
+    <div class="reg-progress__bar" [style.width.%]="stepPercent"></div>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="reg-steps">
+    <div
+      class="reg-step-dot"
+      *ngFor="let label of ['Cuenta','Perfil','Imágenes','¡Listo!']; let i = index; trackBy: trackByIdx"
+      [class.reg-step-dot--done]="currentStep() > i + 1"
+      [class.reg-step-dot--active]="currentStep() === i + 1"
+    >
+      <span class="reg-step-dot__num">
+        <svg *ngIf="currentStep() > i + 1" viewBox="0 0 16 16" fill="currentColor" style="width:12px;height:12px">
+          <path d="M13.5 2.5L6 10 2.5 6.5 1 8l5 5 9-9z"/>
+        </svg>
+        <span *ngIf="currentStep() <= i + 1">{{ i + 1 }}</span>
+      </span>
+      <span class="reg-step-dot__label hide-mob">{{ label }}</span>
+    </div>
+  </div>
+
+  <div class="reg-wrap">
+
+    <!-- ══════════════════════════════════════════════
+         STEP 1 — Cuenta
+         ══════════════════════════════════════════════ -->
+    <div class="reg-card" *ngIf="currentStep() === 1">
+
+      <div class="reg-card__head">
+        <p class="eyebrow">Paso 1 de 4</p>
+        <h1 class="reg-card__title">Crea tu cuenta</h1>
+        <p class="reg-card__sub">Información básica para acceder a TATUA</p>
+      </div>
+
+      <!-- Error -->
+      <div class="reg-error" *ngIf="errorMsg()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px;flex-shrink:0">
+          <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r=".5" fill="currentColor"/>
+        </svg>
+        {{ errorMsg() }}
+      </div>
+
+      <div class="reg-grid">
+
+        <!-- Nombre artístico -->
+        <div class="f-group reg-grid__full">
+          <label class="f-label" for="r-name">Nombre artístico *</label>
+          <input id="r-name" class="f-input" type="text" placeholder="Ej: Jose Tatto"
+            [(ngModel)]="step1.name" (input)="onNameChange()"/>
+        </div>
+
+        <!-- Slug -->
+        <div class="f-group reg-grid__full">
+          <label class="f-label" for="r-slug">Tu URL en TATUA *</label>
+          <div class="f-prefix-wrap">
+            <span class="f-prefix">tatua.co/</span>
+            <input id="r-slug" class="f-input f-input--prefix" type="text" placeholder="josetatto"
+              [(ngModel)]="step1.slug"/>
+          </div>
+          <p class="f-hint">Solo letras minúsculas y números, sin espacios</p>
+        </div>
+
+        <!-- Ciudad -->
+        <div class="f-group">
+          <label class="f-label" for="r-city">Ciudad *</label>
+          <select id="r-city" class="f-select" [(ngModel)]="step1.city_id">
+            <option [value]="0" disabled>Seleccionar</option>
+            <option *ngFor="let c of cities(); trackBy: trackById" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="f-group">
+          <label class="f-label" for="r-wa">WhatsApp *</label>
+          <input id="r-wa" class="f-input" type="tel" placeholder="573116755857"
+            [(ngModel)]="step1.whatsapp"/>
+          <p class="f-hint">Con código de país: 57...</p>
+        </div>
+
+        <!-- Email -->
+        <div class="f-group reg-grid__full">
+          <label class="f-label" for="r-email">Correo electrónico *</label>
+          <input id="r-email" class="f-input" type="email" placeholder="tu@correo.com"
+            [(ngModel)]="step1.email"/>
+        </div>
+
+        <!-- Password -->
+        <div class="f-group">
+          <label class="f-label" for="r-pass">Contraseña *</label>
+          <div class="f-eye-wrap">
+            <input id="r-pass" class="f-input" [type]="showPass() ? 'text' : 'password'"
+              placeholder="Mín. 8 caracteres" [(ngModel)]="step1.password"/>
+            <button class="f-eye" type="button" (click)="showPass.update(v => !v)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm -->
+        <div class="f-group">
+          <label class="f-label" for="r-confirm">Confirmar contraseña *</label>
+          <input id="r-confirm" class="f-input" [type]="showPass() ? 'text' : 'password'"
+            placeholder="Repetir contraseña" [(ngModel)]="step1.confirm"/>
+        </div>
+
+      </div>
+
+      <div class="reg-actions">
+        <a routerLink="/login" class="reg-actions__link">¿Ya tienes cuenta?</a>
+        <button class="btn btn--gold" [disabled]="isLoading()" (click)="nextStep()">
+          <span *ngIf="!isLoading()">Continuar →</span>
+          <span *ngIf="isLoading()" class="btn-spinner"></span>
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════
+         STEP 2 — Perfil
+         ══════════════════════════════════════════════ -->
+    <div class="reg-card" *ngIf="currentStep() === 2">
+
+      <div class="reg-card__head">
+        <p class="eyebrow">Paso 2 de 4</p>
+        <h1 class="reg-card__title">Tu perfil artístico</h1>
+        <p class="reg-card__sub">Esta información aparecerá en tu página pública</p>
+      </div>
+
+      <div class="reg-grid">
+
+        <!-- Tagline -->
+        <div class="f-group reg-grid__full">
+          <label class="f-label" for="r-tagline">Frase de presentación</label>
+          <input id="r-tagline" class="f-input" type="text"
+            placeholder="Ej: Arte que permanece. Historias grabadas en piel."
+            [(ngModel)]="step2.tagline" maxlength="120"/>
+          <p class="f-hint">Aparece debajo de tu nombre en el hero</p>
+        </div>
+
+        <!-- Bio -->
+        <div class="f-group reg-grid__full">
+          <label class="f-label" for="r-bio">Biografía</label>
+          <textarea id="r-bio" class="f-textarea" rows="4"
+            placeholder="Cuéntanos sobre ti, tu trayectoria, tu estilo y qué te diferencia como artista..."
+            [(ngModel)]="step2.bio" maxlength="600"></textarea>
+          <p class="f-hint">{{ step2.bio.length }}/600 caracteres</p>
+        </div>
+
+        <!-- Año de inicio -->
+        <div class="f-group">
+          <label class="f-label" for="r-year">Tatuando desde</label>
+          <select id="r-year" class="f-select" [(ngModel)]="step2.year_started">
+            <option [ngValue]="null">Seleccionar año</option>
+            <option *ngFor="let y of yearOptions; trackBy: trackByIdx" [value]="y">{{ y }}</option>
+          </select>
+        </div>
+
+        <!-- Redes sociales -->
+        <div class="f-group">
+          <label class="f-label" for="r-ig">Instagram</label>
+          <div class="f-prefix-wrap">
+            <span class="f-prefix">@</span>
+            <input id="r-ig" class="f-input f-input--prefix" type="text" placeholder="josetatto"
+              [(ngModel)]="step2.instagram"/>
+          </div>
+        </div>
+
+        <div class="f-group">
+          <label class="f-label" for="r-fb">Facebook</label>
+          <div class="f-prefix-wrap">
+            <span class="f-prefix">fb.com/</span>
+            <input id="r-fb" class="f-input f-input--prefix" type="text" placeholder="josetatto"
+              [(ngModel)]="step2.facebook"/>
+          </div>
+        </div>
+
+        <div class="f-group">
+          <label class="f-label" for="r-tk">TikTok</label>
+          <div class="f-prefix-wrap">
+            <span class="f-prefix">@</span>
+            <input id="r-tk" class="f-input f-input--prefix" type="text" placeholder="josetatto"
+              [(ngModel)]="step2.tiktok"/>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Estilos de tatuaje -->
+      <div class="styles-section">
+        <p class="f-label" style="margin-bottom:.75rem">
+          Estilos que manejas
+          <span style="color:var(--text-dim);font-weight:400">(máx. 5)</span>
+        </p>
+        <div class="styles-grid">
+          <button
+            class="style-chip"
+            *ngFor="let s of styles(); trackBy: trackById"
+            [class.style-chip--active]="isStyleSelected(s.id)"
+            (click)="toggleStyle(s.id)"
+            type="button"
+            [disabled]="!isStyleSelected(s.id) && step2.styleIds.length >= 5"
+          >{{ s.name }}</button>
+        </div>
+      </div>
+
+      <div class="reg-actions">
+        <button class="btn btn--outline btn--sm" (click)="prevStep()">← Atrás</button>
+        <div style="display:flex;gap:.75rem;align-items:center">
+          <button class="btn btn--ghost btn--sm" (click)="skipStep()">Omitir</button>
+          <button class="btn btn--gold" [disabled]="isLoading()" (click)="nextStep()">
+            <span *ngIf="!isLoading()">Continuar →</span>
+            <span *ngIf="isLoading()" class="btn-spinner"></span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════
+         STEP 3 — Imágenes
+         ══════════════════════════════════════════════ -->
+    <div class="reg-card" *ngIf="currentStep() === 3">
+
+      <div class="reg-card__head">
+        <p class="eyebrow">Paso 3 de 4</p>
+        <h1 class="reg-card__title">Tus imágenes</h1>
+        <p class="reg-card__sub">La foto de fondo y tu portafolio son lo primero que verán los clientes</p>
+      </div>
+
+      <!-- Hero image -->
+      <div class="img-section">
+        <p class="img-section__title">
+          Foto de fondo (Hero)
+          <span class="img-section__badge">Recomendado</span>
+        </p>
+        <p class="img-section__desc">
+          Aparece como fondo en tu página. Puede ser tú trabajando, un close-up de tu mejor tatuaje o tu espacio de trabajo.
+        </p>
+
+        <div
+          class="drop-zone"
+          [class.drop-zone--active]="dragOver()"
+          [class.drop-zone--filled]="step3.heroPreview !== null"
+          (dragover)="$event.preventDefault(); dragOver.set(true)"
+          (dragleave)="dragOver.set(false)"
+          (drop)="onHeroDrop($event)"
+          (click)="heroInput.click()"
+        >
+          <ng-container *ngIf="step3.heroPreview">
+            <img [src]="step3.heroPreview" alt="Hero preview" class="drop-zone__preview"/>
+            <button class="drop-zone__remove" type="button"
+              (click)="$event.stopPropagation(); removeHero()">
+              ✕ Quitar
+            </button>
+          </ng-container>
+          <ng-container *ngIf="!step3.heroPreview">
+            <span class="drop-zone__icon">🖼️</span>
+            <p class="drop-zone__text">
+              Arrastra tu foto aquí o <span class="drop-zone__link">haz clic para subir</span>
+            </p>
+            <p class="drop-zone__hint">JPG, PNG o WEBP · Mín. 1200px de ancho · Máx. 10 MB</p>
+          </ng-container>
+        </div>
+        <input #heroInput type="file" accept="image/*" style="display:none" (change)="onHeroChange($event)"/>
+      </div>
+
+      <!-- Portfolio -->
+      <div class="img-section">
+        <p class="img-section__title">
+          Portafolio
+          <span class="img-section__count">{{ step3.portfolioFiles.length }}/9</span>
+        </p>
+        <p class="img-section__desc">
+          Sube tus mejores trabajos. Aparecerán en la galería de tu página.
+        </p>
+
+        <!-- Portfolio grid -->
+        <div class="portfolio-grid" *ngIf="step3.portfolioFiles.length > 0">
+          <div
+            class="portfolio-item"
+            *ngFor="let item of step3.portfolioFiles; let i = index; trackBy: trackByIdx"
+          >
+            <div class="portfolio-item__img-wrap">
+              <img [src]="item.preview" [alt]="item.title || 'Trabajo ' + (i+1)" class="portfolio-item__img"/>
+              <button class="portfolio-item__remove" type="button" (click)="removePortfolio(i)">✕</button>
+            </div>
+            <input
+              class="f-input portfolio-item__title"
+              type="text"
+              placeholder="Título (opcional)"
+              [value]="item.title"
+              (input)="updatePortfolioTitle(i, $any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Drop zone portfolio -->
+        <div
+          class="drop-zone drop-zone--sm"
+          *ngIf="step3.portfolioFiles.length < 9"
+          [class.drop-zone--active]="dragOverPort()"
+          (dragover)="$event.preventDefault(); dragOverPort.set(true)"
+          (dragleave)="dragOverPort.set(false)"
+          (drop)="onPortfolioDrop($event)"
+          (click)="portInput.click()"
+        >
+          <span class="drop-zone__icon">📸</span>
+          <p class="drop-zone__text">
+            Arrastra fotos aquí o <span class="drop-zone__link">haz clic</span>
+          </p>
+          <p class="drop-zone__hint">Puedes seleccionar varias a la vez · Máx. 9 fotos</p>
+        </div>
+        <input #portInput type="file" accept="image/*" multiple style="display:none" (change)="onPortfolioChange($event)"/>
+      </div>
+
+      <div class="reg-actions">
+        <button class="btn btn--outline btn--sm" (click)="prevStep()">← Atrás</button>
+        <div style="display:flex;gap:.75rem;align-items:center">
+          <button class="btn btn--ghost btn--sm" (click)="skipStep()">Omitir</button>
+          <button class="btn btn--gold" [disabled]="isLoading()" (click)="nextStep()">
+            <span *ngIf="!isLoading()">Finalizar →</span>
+            <span *ngIf="isLoading()" class="btn-spinner"></span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════
+         STEP 4 — ¡Listo!
+         ══════════════════════════════════════════════ -->
+    <div class="reg-card reg-card--success" *ngIf="currentStep() === 4">
+
+      <div class="success-icon" aria-hidden="true">🎉</div>
+      <h1 class="reg-card__title">¡Tu perfil está listo!</h1>
+      <p class="reg-card__sub">
+        Ya eres parte de TATUA. Tu página ya está disponible en:
+      </p>
+
+      <div class="success-url">
+        <span>tatua.co/</span><strong>{{ step1.slug }}</strong>
+      </div>
+
+      <p class="success-note">
+        Puedes seguir completando tu perfil desde el dashboard — agregar servicios, precios, disponibilidad y más.
+      </p>
+
+      <div class="success-actions">
+        <a [routerLink]="['/', step1.slug]" class="btn btn--outline" target="_blank">
+          Ver mi página ↗
+        </a>
+        <button class="btn btn--gold btn--lg" (click)="goToDashboard()">
+          Ir al dashboard →
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Decorativo -->
+  <div class="reg-deco" aria-hidden="true">
+    <svg viewBox="0 0 500 500" fill="none">
+      <circle cx="250" cy="250" r="200" stroke="#C9A227" stroke-opacity=".035" stroke-width="1"/>
+      <circle cx="250" cy="250" r="140" stroke="#C9A227" stroke-opacity=".025" stroke-width="1"/>
+      <path d="M250 50 L460 370 L40 370 Z" stroke="#C9A227" stroke-opacity=".02" fill="none"/>
+    </svg>
+  </div>
+
+</div>

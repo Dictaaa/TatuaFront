@@ -1,0 +1,684 @@
+<!-- ══════════════════════════════════════════════════
+     TATUA · Perfil del Artista
+     Ruta: tatua.co/:slug  (ej: tatua.co/edgartatto)
+     ══════════════════════════════════════════════════ -->
+
+<!-- ── NAV ─────────────────────────────────────────────── -->
+<nav class="nav" [class.nav--scrolled]="navScrolled()">
+  <div class="nav__inner wrap">
+    <a class="nav__brand" routerLink="/">TATUA</a>
+
+    <ul class="nav__links hide-mob" role="list">
+      <li><a (click)="scrollTo('work')">Trabajos</a></li>
+      <li><a (click)="scrollTo('services')">Servicios</a></li>
+      <li><a (click)="scrollTo('reviews')">Reseñas</a></li>
+      <li><a (click)="scrollTo('contact')">Contacto</a></li>
+    </ul>
+
+    <button class="btn btn--gold btn--sm" (click)="openBooking()">
+      Reservar cita
+    </button>
+  </div>
+</nav>
+
+
+<!-- Loading state -->
+<div class="profile-loading" *ngIf="isLoading()">
+  <div class="profile-loading__spinner"></div>
+  <p>Cargando perfil...</p>
+</div>
+
+<!-- Error state -->
+<div class="profile-error" *ngIf="loadError() && !isLoading()">
+  <span class="profile-error__icon">😕</span>
+  <h2>Perfil no encontrado</h2>
+  <p>{{ loadError() }}</p>
+  <a routerLink="/" class="btn btn--ghost">← Volver al directorio</a>
+</div>
+
+<!-- Profile content -->
+<ng-container *ngIf="!isLoading() && !loadError()">
+
+<!-- ══════════════════════════════════════════════════
+     HERO — Split layout: texto izquierda + foto derecha
+     ══════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+
+  <!-- Fondo base con textura -->
+  <div class="hero__bg" aria-hidden="true">
+    <div class="hero__bg-ink"></div>
+    <div class="hero__bg-glow"></div>
+  </div>
+
+  <!-- SVG decorativo tatuaje fondo -->
+  <div class="hero__deco-svg" aria-hidden="true">
+    <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="250" cy="250" r="200" stroke="#C9A227" stroke-opacity=".04" stroke-width="1"/>
+      <circle cx="250" cy="250" r="160" stroke="#C9A227" stroke-opacity=".03" stroke-width="1"/>
+      <circle cx="250" cy="250" r="120" stroke="#C9A227" stroke-opacity=".03" stroke-width="1"/>
+      <path d="M250 50 L460 370 L40 370 Z" stroke="#C9A227" stroke-opacity=".025" stroke-width=".8" fill="none"/>
+      <path d="M250 450 L40 130 L460 130 Z" stroke="#C9A227" stroke-opacity=".025" stroke-width=".8" fill="none"/>
+      <line x1="50"  y1="250" x2="450" y2="250" stroke="#C9A227" stroke-opacity=".02" stroke-width=".6"/>
+      <line x1="250" y1="50"  x2="250" y2="450" stroke="#C9A227" stroke-opacity=".02" stroke-width=".6"/>
+    </svg>
+  </div>
+
+  <div class="hero__inner wrap">
+
+    <!-- Columna izquierda — texto -->
+    <div class="hero__left">
+      <p class="hero__handle eyebrow">{{ artist().handle }}</p>
+
+      <h1 class="hero__name">
+        <span class="hero__name-first">{{ artist().name.split(' ')[0] }}</span>
+        <span class="hero__name-last">{{ artist().name.split(' ')[1] }}</span>
+      </h1>
+
+      <p class="hero__tagline">{{ artist().tagline }}</p>
+
+      <!-- Especialidades como pills -->
+      <div class="hero__pills">
+        <span class="hero__pill" *ngFor="let s of artist().specialty; trackBy: trackByIdx">
+          {{ s }}
+        </span>
+      </div>
+
+      <!-- CTAs -->
+      <div class="hero__ctas">
+        <button class="btn btn--gold btn--lg" (click)="openBooking()">
+          Reservar cita
+        </button>
+        <button class="btn btn--outline btn--lg" (click)="scrollTo('work')">
+          Ver trabajos
+        </button>
+      </div>
+
+      <!-- Redes sociales — solo ícono circular -->
+      <div class="hero__socials">
+
+        <!-- WhatsApp -->
+        <a [href]="'https://wa.me/' + artist().whatsapp" target="_blank" rel="noopener"
+           class="social-btn social-btn--wa" aria-label="WhatsApp">
+          <svg class="social-btn__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+  <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+</svg>
+        </a>
+
+        <!-- Instagram -->
+        <a [href]="'https://instagram.com/' + artist().instagram" target="_blank" rel="noopener"
+           class="social-btn social-btn--ig" aria-label="Instagram">
+          <svg class="social-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/>
+          </svg>
+        </a>
+
+        <!-- Facebook -->
+        <a href="#" class="social-btn social-btn--fb" aria-label="Facebook">
+          <svg class="social-btn__icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.887v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+          </svg>
+        </a>
+
+        <!-- TikTok -->
+        <a href="#" class="social-btn social-btn--tk" aria-label="TikTok">
+          <svg class="social-btn__icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z"/>
+          </svg>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- Foto de fondo derecha — PNG sin bordes, degradado que desvanece -->
+  </div><!-- cierre hero__inner adelantado para que la foto sea relativa al hero -->
+
+  <div class="hero__photo-bg" aria-hidden="true">
+    <!-- En producción: [src]="artist().heroImage" -->
+    <!-- Real artist photo when available, fallback to gradient placeholder -->
+    <img
+      *ngIf="artist().heroImage"
+      [src]="artist().heroImage"
+      [alt]="artist().name"
+      class="hero__photo"
+    />
+    <div class="hero__photo-fade"></div>
+  </div>
+
+  <!-- Badge disponibilidad -->
+  <!-- <div class="hero__photo-badge">
+    <span class="hero__photo-badge-dot"></span>
+    Disponible para citas
+  </div>
+
+  <div class="hero__float-stat">
+    <strong>{{ artist().totalWorks | number }}</strong>
+    <span>tatuajes</span>
+  </div> -->
+
+  <div style="display:none"><!-- dummy para no romper estructura-->
+
+  </div>
+
+  <!-- Stats bar inferior -->
+  <div class="hero__stats-bar">
+    <div class="wrap hero__stats-inner">
+      <div class="hero__stat">
+        <strong>{{ yearsActive() }}</strong>
+        <span>años de experiencia</span>
+      </div>
+      <div class="hero__stat-sep"></div>
+      <div class="hero__stat">
+        <strong>{{ artist().totalWorks | number }}</strong>
+        <span>tatuajes realizados</span>
+      </div>
+      <div class="hero__stat-sep"></div>
+      <div class="hero__stat">
+        <strong>⭐ {{ artist().rating }}</strong>
+        <span>calificación</span>
+      </div>
+      <div class="hero__stat-sep hide-mob"></div>
+      <div class="hero__stat hide-mob">
+        <strong>{{ artist().city.split(',')[0] }}</strong>
+        <span>Colombia</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     BIO + ESTILOS
+     ══════════════════════════════════════════════════ -->
+<section class="bio-sec" id="bio">
+  <!-- Decorativo fondo -->
+  <div class="bio-sec__deco" aria-hidden="true"></div>
+
+  <div class="wrap bio-sec__inner">
+
+    <div class="bio-sec__text reveal-left">
+      <p class="eyebrow">Sobre mí</p>
+      <div class="gold-line" style="margin:.75rem 0 1.5rem; animation:lineGrow .6s var(--ease) .3s both"></div>
+      <p class="bio-sec__copy">{{ artist().bio }}</p>
+
+      <!-- Redes sociales secundarias -->
+      <div class="bio-socials">
+        <a [href]="'https://instagram.com/' + artist().instagram" target="_blank" rel="noopener" class="bio-social">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="17.5" cy="6.5" r=".5" fill="currentColor" stroke="none"/>
+          </svg>
+          &#64;{{ artist().instagram }}
+        </a>
+        <a [href]="'https://wa.me/' + artist().whatsapp" target="_blank" rel="noopener" class="bio-social">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+          </svg>
+          Escribir ahora
+        </a>
+      </div>
+    </div>
+
+    <div class="bio-sec__styles reveal-right">
+      <div class="style-card" *ngFor="let s of artist().styles; trackBy: trackByIdx">
+        <div class="style-card__icon" aria-hidden="true">{{ s.emoji }}</div>
+        <div class="style-card__body">
+          <p class="style-card__name">{{ s.name }}</p>
+          <p class="style-card__desc">{{ s.desc }}</p>
+        </div>
+        <span class="style-card__arrow">→</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     PORTFOLIO
+     ══════════════════════════════════════════════════ -->
+<section class="port-sec" id="work">
+  <div class="wrap">
+
+    <header class="port-sec__header reveal">
+      <div>
+        <p class="eyebrow">Portafolio</p>
+        <div class="gold-line" style="margin:.75rem 0"></div>
+        <h2 class="port-sec__title">Trabajos recientes</h2>
+      </div>
+
+      <div class="port-filter" role="tablist">
+        <button
+          *ngFor="let s of portfolioStyles; trackBy: trackByIdx"
+          class="port-filter__btn"
+          [class.port-filter__btn--active]="activeStyle() === s"
+          (click)="setStyle(s)"
+          role="tab"
+          [attr.aria-selected]="activeStyle() === s"
+        >{{ s }}</button>
+      </div>
+    </header>
+
+    <div class="port-grid">
+      <article
+        class="port-item reveal-scale"
+        *ngFor="let item of filteredPortfolio(); trackBy: trackByIdx"
+        (click)="openLightbox(item)"
+        tabindex="0"
+        (keydown.enter)="openLightbox(item)"
+        [attr.aria-label]="'Ver ' + item.title"
+      >
+        <div class="port-item__img">
+          <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.title" class="port-item__real-img" loading="lazy"/>
+          <span class="port-item__emoji" [class.port-item__emoji--hidden]="item.imageUrl" aria-hidden="true">{{ item.emoji }}</span>
+          <div class="port-item__hover">
+            <span class="port-item__zoom">↗</span>
+          </div>
+        </div>
+        <div class="port-item__info">
+          <span class="port-item__title">{{ item.title }}</span>
+          <span class="port-item__meta">{{ item.style }} · {{ item.duration }}</span>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     SERVICES
+     ══════════════════════════════════════════════════ -->
+<section class="svc-sec" id="services">
+  <!-- Decorativo linea diagonal de fondo -->
+  <div class="svc-sec__deco" aria-hidden="true">
+    <svg viewBox="0 0 1200 400" preserveAspectRatio="none" fill="none">
+      <path d="M0 400 L400 0 L1200 0 L1200 400 Z" fill="url(#svcGrad)"/>
+      <defs>
+        <linearGradient id="svcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#C9A227" stop-opacity=".04"/>
+          <stop offset="100%" stop-color="#C9A227" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="wrap">
+    <header class="svc-sec__header reveal">
+      <p class="eyebrow">Servicios</p>
+      <div class="gold-line" style="margin:.75rem 0 1.25rem"></div>
+      <h2 class="svc-sec__title">Precios y servicios</h2>
+    </header>
+
+    <div class="svc-grid">
+      <div
+        class="svc-card reveal"
+        [style.transition-delay]="i * 80 + 'ms'"
+        *ngFor="let svc of artist().services; let i = index; trackBy: trackByIdx"
+      >
+        <div class="svc-card__top">
+          <p class="svc-card__name">{{ svc.name }}</p>
+          <span class="svc-card__badge">{{ svc.badge }}</span>
+        </div>
+        <p class="svc-card__desc">{{ svc.desc }}</p>
+        <p class="svc-card__price">{{ svc.from }}</p>
+        <button class="btn btn--ghost btn--sm btn--full" (click)="openBooking()">
+          Reservar →
+        </button>
+      </div>
+    </div>
+
+    <p class="svc-note reveal">
+      ✦ Se requiere anticipo del <strong>50%</strong> para confirmar la cita. Sin devoluciones, con derecho a reprogramación.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     REVIEWS
+     ══════════════════════════════════════════════════ -->
+<section class="rev-sec" id="reviews">
+  <div class="wrap">
+
+    <header class="rev-sec__header reveal">
+      <p class="eyebrow">Reseñas</p>
+      <div class="gold-line" style="margin:.75rem 0 1.25rem"></div>
+      <h2 class="rev-sec__title">Lo que dicen los clientes</h2>
+    </header>
+
+    <div class="rev-grid">
+      <article
+        class="rev-card reveal"
+        [style.transition-delay]="i * 100 + 'ms'"
+        *ngFor="let r of artist().reviews; let i = index; trackBy: trackByIdx"
+      >
+        <div class="rev-card__stars">
+          <span
+            *ngFor="let s of starArray; trackBy: trackByIdx"
+            class="rev-card__star"
+            [class.rev-card__star--lit]="s <= r.rating"
+            aria-hidden="true"
+          >★</span>
+        </div>
+        <blockquote class="rev-card__text">"{{ r.text }}"</blockquote>
+        <div class="rev-card__author">
+          <div class="rev-card__avatar">{{ r.initials }}</div>
+          <div>
+            <p class="rev-card__name">{{ r.name }}</p>
+            <p class="rev-card__date">{{ r.date }}</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     CONTACTO / SOCIALS
+     ══════════════════════════════════════════════════ -->
+<section class="contact-sec" id="contact">
+  <div class="wrap contact-sec__inner">
+
+    <div class="reveal">
+      <p class="eyebrow">Contacto directo</p>
+      <div class="gold-line" style="margin:.75rem 0 1.25rem"></div>
+      <h2 class="contact-sec__title">¿Hablamos?</h2>
+      <p class="contact-sec__sub">Escríbeme para cotizar tu tatuaje, resolver dudas o simplemente compartir tu idea.</p>
+    </div>
+
+    <div class="contact-sec__socials reveal">
+
+      <a [href]="'https://instagram.com/' + artist().instagram" target="_blank" rel="noopener" class="contact-social">
+        <div class="contact-social__icon contact-social__icon--ig">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="17.5" cy="6.5" r=".5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="contact-social__info">
+          <strong>Instagram</strong>
+          <span>&#64;{{ artist().instagram }}</span>
+        </div>
+        <span class="contact-social__arrow">↗</span>
+      </a>
+
+      <a [href]="'https://wa.me/' + artist().whatsapp" target="_blank" rel="noopener" class="contact-social">
+        <div class="contact-social__icon contact-social__icon--wa">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+          </svg>
+        </div>
+        <div class="contact-social__info">
+          <strong>WhatsApp</strong>
+          <span>Responde en minutos</span>
+        </div>
+        <span class="contact-social__arrow">↗</span>
+      </a>
+
+      <button class="contact-social contact-social--cta" (click)="openBooking()">
+        <div class="contact-social__icon contact-social__icon--book">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="contact-social__info">
+          <strong>Reservar cita</strong>
+          <span>Agenda online · 24/7</span>
+        </div>
+        <span class="contact-social__arrow">→</span>
+      </button>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     FOOTER CTA + FOOTER
+     ══════════════════════════════════════════════════ -->
+<section class="cta-bar">
+  <div class="wrap cta-bar__inner">
+    <div class="reveal-left">
+      <p class="eyebrow">¿Listo para tu próxima historia?</p>
+      <h2 class="cta-bar__title">Reserva tu cita con<br><em>{{ artist().name.split(' ')[0] }}</em></h2>
+    </div>
+    <button class="btn btn--gold btn--lg reveal-right" (click)="openBooking()">
+      Agendar ahora →
+    </button>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__left">
+      <span class="footer__brand">TATUA</span>
+      <span class="footer__artist">{{ artist().handle }}</span>
+    </div>
+    <span class="footer__copy">{{ artist().city }} · Colombia</span>
+    <a class="footer__powered" routerLink="/">Powered by tatua.co</a>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+     BOOKING PANEL
+     ══════════════════════════════════════════════════ -->
+<div
+  class="booking-overlay"
+  (click)="closeBooking()"
+  role="dialog" aria-modal="true" aria-label="Reservar cita"
+  *ngIf="bookingOpen()"
+>
+  <div class="booking-panel" (click)="$event.stopPropagation()">
+
+    <div class="booking-panel__head">
+      <div>
+        <p class="eyebrow" style="margin-bottom:.2rem">Reserva tu cita</p>
+        <p style="font-size:.78rem;color:var(--text-muted)">{{ artist().name }} · {{ artist().city }}</p>
+      </div>
+      <button class="booking-panel__close" (click)="closeBooking()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="step-bar">
+      <div
+        class="step-bar__item"
+        *ngFor="let label of ['Tipo','Datos','Fecha','Confirmar']; let i = index; trackBy: trackByIdx"
+        [class.step-bar__item--active]="currentStep() === i"
+        [class.step-bar__item--done]="currentStep() > i"
+        (click)="goStep(i)"
+        role="tab"
+        [attr.aria-selected]="currentStep() === i"
+      >
+        <span class="step-bar__num">
+          <ng-container *ngIf="currentStep() <= i">{{ i + 1 }}</ng-container>
+          <ng-container *ngIf="currentStep() > i">✓</ng-container>
+        </span>
+        <span class="step-bar__label hide-mob">{{ label }}</span>
+      </div>
+      <div class="step-bar__progress" [style.width.%]="(currentStep() / 3) * 100"></div>
+    </div>
+
+    <div class="booking-panel__body">
+
+      <!-- Step 0 -->
+      <div class="step" *ngIf="currentStep() === 0" role="tabpanel">
+        <p class="step__title">¿Qué tipo de tatuaje buscas?</p>
+        <div class="type-grid">
+          <button
+            class="type-btn"
+            *ngFor="let t of tattooTypes; trackBy: trackByIdx"
+            [class.type-btn--sel]="form.type === t.label"
+            (click)="selectType(t.label, t.id)"
+            type="button"
+          >
+            <span class="type-btn__icon" aria-hidden="true">{{ t.icon }}</span>
+            <span class="type-btn__label">{{ t.label }}</span>
+          </button>
+        </div>
+        <div class="step-actions">
+          <span></span>
+          <button class="btn btn--gold" (click)="nextStep()">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step" *ngIf="currentStep() === 1" role="tabpanel">
+        <p class="step__title">Tu información</p>
+        <div class="form-grid">
+          <div>
+            <label class="f-label" for="b-name">Nombre completo</label>
+            <input id="b-name" class="f-input" type="text" placeholder="Tu nombre" [(ngModel)]="form.name">
+          </div>
+          <div>
+            <label class="f-label" for="b-wa">WhatsApp</label>
+            <input id="b-wa" class="f-input" type="tel" placeholder="+57 300 000 0000" [(ngModel)]="form.whatsapp">
+          </div>
+          <div>
+            <label class="f-label" for="b-email">Correo</label>
+            <input id="b-email" class="f-input" type="email" placeholder="tu@correo.com" [(ngModel)]="form.email">
+          </div>
+          <div>
+            <label class="f-label" for="b-zone">Zona del cuerpo</label>
+            <select id="b-zone" class="f-select" [(ngModel)]="form.zone">
+              <option value="">Seleccionar</option>
+              <option *ngFor="let z of bodyZones; trackBy: trackByIdx" [value]="z">{{ z }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="f-label" for="b-size">Tamaño</label>
+            <select id="b-size" class="f-select" [(ngModel)]="form.size">
+              <option value="">Seleccionar</option>
+              <option *ngFor="let s of sizes; trackBy: trackByIdx" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div class="form-grid__full">
+            <label class="f-label" for="b-desc">Descripción</label>
+            <textarea id="b-desc" class="f-textarea" placeholder="Describe el tatuaje que deseas..." [(ngModel)]="form.description"></textarea>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn--outline btn--sm" (click)="prevStep()">← Atrás</button>
+          <button class="btn btn--gold" (click)="nextStep()">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step" *ngIf="currentStep() === 2" role="tabpanel">
+        <p class="step__title">Elige una fecha</p>
+        <div class="cal">
+          <div class="cal__head">
+            <button class="cal__nav" (click)="prevMonth()" aria-label="Mes anterior">‹</button>
+            <span class="cal__month">{{ calMonthLabel() }}</span>
+            <button class="cal__nav" (click)="nextMonth()" aria-label="Mes siguiente">›</button>
+          </div>
+          <div class="cal__grid">
+            <div class="cal__dow" *ngFor="let d of dowLabels; trackBy: trackByIdx">{{ d }}</div>
+            <button
+              *ngFor="let cell of calCells(); trackBy: trackByIdx"
+              class="cal__day"
+              [class.cal__day--empty]="cell.day === null"
+              [class.cal__day--busy]="cell.busy"
+              [class.cal__day--past]="cell.past"
+              [class.cal__day--today]="cell.today"
+              [class.cal__day--sel]="cell.day === form.date && !cell.busy && !cell.past"
+              [disabled]="cell.day === null || cell.busy || cell.past"
+              (click)="cell.day && !cell.busy && !cell.past && pickDay(cell.day)"
+              [attr.aria-label]="cell.day ? cell.day + ' ' + calMonthLabel() : null"
+              [attr.aria-current]="cell.today ? 'date' : null"
+            ><span *ngIf="cell.day">{{ cell.day }}</span></button>
+          </div>
+          <div class="cal__legend">
+            <div class="cal__leg"><span class="cal__dot cal__dot--free"></span>Disponible</div>
+            <div class="cal__leg"><span class="cal__dot cal__dot--busy"></span>Ocupado</div>
+            <div class="cal__leg"><span class="cal__dot cal__dot--today"></span>Hoy</div>
+            <div class="cal__leg cal__leg--sel" *ngIf="form.date">✓ {{ form.date }} {{ calMonthLabel() }}</div>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn--outline btn--sm" (click)="prevStep()">← Atrás</button>
+          <button class="btn btn--gold" (click)="nextStep()">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step" *ngIf="currentStep() === 3" role="tabpanel">
+        <p class="step__title">Confirmar y enviar</p>
+        <div class="summary-box">
+          <div class="summary-row"><span class="label">Tipo</span><span>{{ form.type || '—' }}</span></div>
+          <div class="summary-row"><span class="label">Nombre</span><span>{{ form.name || '—' }}</span></div>
+          <div class="summary-row"><span class="label">WhatsApp</span><span>{{ form.whatsapp || '—' }}</span></div>
+          <div class="summary-row"><span class="label">Zona</span><span>{{ form.zone || '—' }}</span></div>
+          <div class="summary-row"><span class="label">Tamaño</span><span>{{ form.size || '—' }}</span></div>
+          <div class="summary-row" *ngIf="form.date"><span class="label">Fecha</span><span>{{ form.date }} {{ calMonthLabel() }}</span></div>
+        </div>
+        <p class="step__sub" style="margin-bottom:.75rem">Método de pago del anticipo (50%)</p>
+        <div class="pay-grid">
+          <button
+            class="pay-btn"
+            *ngFor="let p of payments; trackBy: trackByIdx"
+            [class.pay-btn--sel]="form.payment === p.id"
+            (click)="selectPayment(p.id)"
+            type="button"
+          >
+            <span class="pay-btn__name">{{ p.label }}</span>
+            <span class="pay-btn__detail">{{ p.detail }}</span>
+          </button>
+        </div>
+        <p class="policy-note">✦ El anticipo no es reembolsable. Puedes reprogramar según disponibilidad.</p>
+        <!-- API error -->
+        <div class="booking-error" *ngIf="submitError">
+          <span class="booking-error__icon">⚠</span>
+          {{ submitError }}
+        </div>
+        <div class="step-actions">
+          <button class="btn btn--outline btn--sm" (click)="prevStep()">← Atrás</button>
+          <button class="btn btn--gold btn--lg" (click)="sendBooking()" [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting">Enviar por WhatsApp →</span>
+            <span *ngIf="isSubmitting">Enviando…</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ── LIGHTBOX ───────────────────────────────────────────── -->
+<div
+  class="lightbox"
+  *ngIf="lightboxItem() as item"
+  (click)="closeLightbox()"
+  role="dialog" aria-modal="true"
+>
+  <button class="lightbox__close" (click)="closeLightbox()" aria-label="Cerrar">✕</button>
+  <div class="lightbox__card" (click)="$event.stopPropagation()">
+    <div class="lightbox__img"><span class="lightbox__emoji" aria-hidden="true">{{ item.emoji }}</span></div>
+    <div class="lightbox__info">
+      <p class="eyebrow">{{ item.style }}</p>
+      <h3 class="lightbox__title">{{ item.title }}</h3>
+      <p class="label" style="margin-top:.5rem">Duración aprox: {{ item.duration }}</p>
+      <button class="btn btn--gold btn--full" style="margin-top:1.5rem" (click)="closeLightbox(); openBooking()">
+        Reservar este estilo →
+      </button>
+    </div>
+  </div>
+</div>
+
+
+</ng-container><!-- /profile content -->
+
+<!-- ── TOAST ─────────────────────────────────────────────── -->
+<aside class="toast" [class.toast--show]="toastData() !== null" role="alert" aria-live="polite" *ngIf="toastData() as t">
+  <strong class="toast__title">{{ t.title }}</strong>
+  <span class="toast__msg">{{ t.msg }}</span>
+</aside>

@@ -1,0 +1,305 @@
+<!-- ══════════════════════════════════════════════════
+     TATUA · Confirmar pago del anticipo
+     Ruta: /confirmar-pago?booking=123
+     ══════════════════════════════════════════════════ -->
+
+<div class="confirm-page">
+
+  <!-- Brand header -->
+  <header class="confirm-header">
+    <span class="confirm-logo">TATUA</span>
+  </header>
+
+  <!-- ── FORM ──────────────────────────────────────────────── -->
+  <div class="confirm-wrap" *ngIf="step() === 'form'">
+
+    <!-- Loading skeleton -->
+    <div class="confirm-skeleton" *ngIf="!booking() && !errorMsg()">
+      <div class="skeleton skeleton--title"></div>
+      <div class="skeleton skeleton--line"></div>
+      <div class="skeleton skeleton--line short"></div>
+    </div>
+
+    <!-- Error loading booking -->
+    <div class="confirm-error-page" *ngIf="errorMsg() && !booking()">
+      <span class="confirm-error-page__icon">😕</span>
+      <h2>Cita no encontrada</h2>
+      <p>{{ errorMsg() }}</p>
+    </div>
+
+    <!-- Main content -->
+    <ng-container *ngIf="booking() as b">
+
+      <!-- Page title -->
+      <div class="confirm-page__head">
+        <p class="eyebrow">Anticipo de reserva</p>
+        <h1 class="confirm-page__title">Confirma tu pago</h1>
+        <p class="confirm-page__sub">
+          Para asegurar tu fecha con <strong>{{ b.artist?.name ?? 'el artista' }}</strong>,
+          realiza el anticipo del {{ b.deposit_percent ?? 50 }}%.
+        </p>
+      </div>
+
+      <!-- Booking summary card -->
+      <div class="booking-summary">
+        <div class="booking-summary__head">
+          <span class="booking-summary__num">{{ bookingNumberShort }}</span>
+          <span class="booking-summary__state">Esperando anticipo</span>
+        </div>
+        <div class="booking-summary__rows">
+          <div class="summary-row">
+            <span>Artista</span>
+            <strong>{{ b.artist?.name ?? '—' }}</strong>
+          </div>
+          <div class="summary-row">
+            <span>Tipo de tatuaje</span>
+            <strong>{{ b.type?.name ?? '—' }}</strong>
+          </div>
+          <div class="summary-row" *ngIf="b.zone">
+            <span>Zona</span>
+            <strong>{{ b.zone.name }}</strong>
+          </div>
+          <div class="summary-row" *ngIf="b.booked_date">
+            <span>Fecha deseada</span>
+            <strong>{{ formatDate(b.booked_date) }}</strong>
+          </div>
+          <div class="summary-row" *ngIf="b.estimated_price">
+            <span>Precio estimado</span>
+            <strong>{{ formatCOP(b.estimated_price) }}</strong>
+          </div>
+        </div>
+
+        <!-- Anticipo highlight -->
+        <div class="booking-summary__anticipo">
+          <div>
+            <p class="booking-summary__anticipo-label">
+              Anticipo a pagar ({{ b.deposit_percent ?? 50 }}%)
+            </p>
+            <p class="booking-summary__anticipo-note">
+              Se descuenta del total en tu cita
+            </p>
+          </div>
+          <span class="booking-summary__anticipo-amount">
+            {{ depositAmount > 0 ? formatCOP(depositAmount) : 'Según cotización' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Policy notice -->
+      <div class="policy-notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px;flex-shrink:0;margin-top:2px">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r=".5" fill="currentColor"/>
+        </svg>
+        <p>
+          El anticipo <strong>no es reembolsable</strong>. Si no puedes asistir,
+          puedes solicitar una reprogramación según disponibilidad del artista.
+        </p>
+      </div>
+
+      <!-- ── PAYMENT METHODS ──────────────────────────────── -->
+      <div class="pay-section">
+        <p class="pay-section__title">Elige el método de pago</p>
+
+        <div class="pay-methods">
+          <button
+            class="pay-method"
+            *ngFor="let m of payMethods()"
+            [class.pay-method--active]="selectedMethod() === m.id"
+            (click)="selectedMethod.set(m.id)"
+            type="button"
+          >
+            <span class="pay-method__icon" aria-hidden="true">{{ m.icon }}</span>
+            <div class="pay-method__info">
+              <strong>{{ m.name }}</strong>
+              <span>{{ m.detail }}</span>
+            </div>
+            <span
+              class="pay-method__check"
+              *ngIf="selectedMethod() === m.id"
+              aria-hidden="true"
+            >✓</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── REFERENCE NUMBER ─────────────────────────────── -->
+      <div class="pay-section">
+        <label class="f-label" for="ext-ref">
+          Número de referencia / comprobante
+          <span style="color:var(--text-dim)">(opcional)</span>
+        </label>
+        <input
+          id="ext-ref"
+          class="f-input"
+          type="text"
+          placeholder="Ej: 123456789"
+          [value]="externalRef()"
+          (input)="externalRef.set($any($event.target).value)"
+        />
+        <p class="f-hint">Número de transacción del banco o plataforma de pago</p>
+      </div>
+
+      <!-- ── RECEIPT UPLOAD ───────────────────────────────── -->
+      <div class="pay-section">
+        <p class="pay-section__title">
+          Adjunta el comprobante
+          <span style="color:var(--text-dim);font-weight:400">(opcional pero recomendado)</span>
+        </p>
+
+        <!-- Drop zone -->
+        <div
+          class="drop-zone"
+          [class.drop-zone--active]="dragOver()"
+          [class.drop-zone--filled]="receiptFile() !== null"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+          (click)="fileInput.click()"
+        >
+          <!-- Preview image -->
+          <ng-container *ngIf="receiptPreview()">
+            <img [src]="receiptPreview()" alt="Comprobante" class="drop-zone__preview" />
+            <button
+              class="drop-zone__remove"
+              type="button"
+              (click)="$event.stopPropagation(); removeFile()"
+              aria-label="Quitar imagen"
+            >✕</button>
+          </ng-container>
+
+          <!-- PDF selected (no preview) -->
+          <ng-container *ngIf="receiptFile() && !receiptPreview()">
+            <span class="drop-zone__file-icon" aria-hidden="true">📄</span>
+            <p class="drop-zone__file-name">{{ receiptFile()!.name }}</p>
+            <button
+              class="drop-zone__remove"
+              type="button"
+              (click)="$event.stopPropagation(); removeFile()"
+            >Quitar</button>
+          </ng-container>
+
+          <!-- Empty state -->
+          <ng-container *ngIf="!receiptFile()">
+            <span class="drop-zone__icon" aria-hidden="true">📎</span>
+            <p class="drop-zone__text">
+              Arrastra tu captura aquí o <span class="drop-zone__link">haz clic para subir</span>
+            </p>
+            <p class="drop-zone__hint">JPG, PNG, WEBP o PDF · Máx. 10 MB</p>
+          </ng-container>
+        </div>
+
+        <input
+          #fileInput
+          type="file"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
+          style="display:none"
+          (change)="onFileChange($event)"
+        />
+      </div>
+
+      <!-- ── NOTES ────────────────────────────────────────── -->
+      <div class="pay-section">
+        <label class="f-label" for="pay-notes">
+          Nota para el artista
+          <span style="color:var(--text-dim)">(opcional)</span>
+        </label>
+        <textarea
+          id="pay-notes"
+          class="f-textarea"
+          rows="2"
+          placeholder="Ej: Ya realicé la transferencia, quedo pendiente..."
+          [value]="notes()"
+          (input)="notes.set($any($event.target).value)"
+        ></textarea>
+      </div>
+
+      <!-- Submit error -->
+      <div class="submit-error" *ngIf="errorMsg() && booking()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px;flex-shrink:0">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r=".5" fill="currentColor"/>
+        </svg>
+        {{ errorMsg() }}
+      </div>
+
+      <!-- Submit button -->
+      <button
+        class="btn btn--gold btn--full submit-btn"
+        [disabled]="isLoading() || !selectedMethod()"
+        (click)="submit()"
+        type="button"
+      >
+        <span *ngIf="!isLoading()">
+          Enviar comprobante
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px">
+            <path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/>
+          </svg>
+        </span>
+        <span *ngIf="isLoading()" class="btn-spinner"></span>
+      </button>
+
+      <p class="confirm-footer-note">
+        Al enviar, se abrirá WhatsApp para notificar al artista directamente.
+      </p>
+
+    </ng-container>
+  </div>
+
+
+  <!-- ── SUCCESS ────────────────────────────────────────────── -->
+  <div class="confirm-wrap confirm-success" *ngIf="step() === 'success'">
+
+    <div class="success-icon" aria-hidden="true">✓</div>
+    <h1 class="success-title">¡Comprobante enviado!</h1>
+    <p class="success-sub">
+      El artista revisará tu pago y confirmará la cita. Recibirás una notificación por WhatsApp.
+    </p>
+
+    <div class="success-card">
+      <div class="success-card__row">
+        <span>Número de cita</span>
+        <strong>{{ bookingNumberShort }}</strong>
+      </div>
+      <div class="success-card__row">
+        <span>Estado actual</span>
+        <strong style="color:#E67E22">Esperando verificación</strong>
+      </div>
+      <div class="success-card__row" *ngIf="booking()?.booked_date">
+        <span>Fecha deseada</span>
+        <strong>{{ formatDate(booking()!.booked_date) }}</strong>
+      </div>
+    </div>
+
+    <div class="success-steps">
+      <p class="success-steps__title">¿Qué sigue?</p>
+      <ol class="success-steps__list">
+        <li>
+          <span class="success-steps__num">1</span>
+          El artista revisa el comprobante
+        </li>
+        <li>
+          <span class="success-steps__num">2</span>
+          Confirma la cita y te avisa por WhatsApp
+        </li>
+        <li>
+          <span class="success-steps__num">3</span>
+          ¡Tu fecha queda bloqueada! 🎨
+        </li>
+      </ol>
+    </div>
+
+    <a
+      *ngIf="booking()?.artist?.slug"
+      [routerLink]="['/', booking().artist.slug]"
+      class="btn btn--outline"
+      style="margin-top:1rem"
+    >
+      Volver al perfil del artista
+    </a>
+
+  </div>
+
+</div>

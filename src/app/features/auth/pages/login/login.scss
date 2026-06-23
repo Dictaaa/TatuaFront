@@ -1,0 +1,198 @@
+// ════════════════════════════════════════════════
+// TATUA · Auth pages (Login & Register)
+// ════════════════════════════════════════════════
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+
+  &__deco {
+    position: absolute;
+    right: -10%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50vw;
+    max-width: 600px;
+    opacity: .6;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+// ── Auth box ──────────────────────────────────────
+.auth-box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeUp .6s var(--ease) both;
+}
+
+.auth-box__brand {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.auth-logo {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.auth-tagline {
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// ── Form card ──────────────────────────────────────
+.auth-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+  }
+}
+
+// ── Error ─────────────────────────────────────────
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: rgba(231,76,60,.1);
+  border: 1px solid rgba(231,76,60,.3);
+  border-radius: var(--r);
+  padding: .75rem 1rem;
+  font-size: .82rem;
+  color: #e74c3c;
+  animation: fadeIn .2s var(--ease) both;
+}
+
+// ── Field group ───────────────────────────────────
+.f-group {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+// ── Input with prefix ─────────────────────────────
+.f-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.f-input-prefix {
+  position: absolute;
+  left: 12px;
+  font-size: .82rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.f-input--prefixed {
+  padding-left: 74px !important;
+}
+
+.f-input-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--t) var(--ease);
+
+  &:hover { color: var(--gold); }
+}
+
+// ── Submit ────────────────────────────────────────
+.auth-submit {
+  margin-top: .25rem;
+  padding: 13px;
+  font-size: .82rem;
+  letter-spacing: .12em;
+  position: relative;
+  min-height: 44px;
+
+  &:disabled { opacity: .65; cursor: not-allowed; }
+}
+
+// ── Spinner ───────────────────────────────────────
+.auth-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(10,10,10,.3);
+  border-top-color: #0A0A0A;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Switch link ───────────────────────────────────
+.auth-switch {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--text-muted);
+
+  a {
+    color: var(--gold);
+    font-weight: 600;
+    transition: color var(--t) var(--ease);
+
+    &:hover { color: var(--gold-bright); }
+  }
+}
+
+// ── Divider ───────────────────────────────────────
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  color: var(--text-dim);
+  font-size: .72rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}

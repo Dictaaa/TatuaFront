@@ -1,0 +1,409 @@
+<!-- ══════════════════════════════════════════════════
+     TATUA · Landing — Home general
+     ══════════════════════════════════════════════════ -->
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="land-nav">
+  <div class="land-nav__inner wrap">
+    <span class="land-nav__logo">TATUA</span>
+    <div class="land-nav__links hide-mob">
+      <a href="#artists">Artistas</a>
+      <a href="#how">¿Cómo funciona?</a>
+      <a routerLink="/register">Para artistas</a>
+    </div>
+    <div class="land-nav__actions">
+      <a routerLink="/login" class="btn btn--ghost btn--sm hide-mob">Ingresar</a>
+      <a routerLink="/register" class="btn btn--gold btn--sm">Soy tatuador</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ══════════════════════════════════════════════════
+     HERO
+     ══════════════════════════════════════════════════ -->
+<section class="land-hero">
+
+  <!-- Background decorativo -->
+  <div class="land-hero__bg" aria-hidden="true">
+    <div class="land-hero__glow"></div>
+    <svg class="land-hero__svg" viewBox="0 0 800 600" fill="none">
+      <circle cx="400" cy="300" r="280" stroke="#C9A227" stroke-opacity=".035" stroke-width="1"/>
+      <circle cx="400" cy="300" r="200" stroke="#C9A227" stroke-opacity=".025" stroke-width="1"/>
+      <path d="M400 40 L700 520 L100 520 Z" stroke="#C9A227" stroke-opacity=".02" stroke-width="1" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="wrap land-hero__content">
+
+    <!-- Badge -->
+    <div class="land-hero__badge">
+      <span class="land-hero__badge-dot"></span>
+      Plataforma colombiana de tatuajes
+    </div>
+
+    <!-- Headline -->
+    <h1 class="land-hero__title">
+      Conecta tu historia<br>
+      con el <em>artista correcto</em>
+    </h1>
+
+    <p class="land-hero__sub">
+      Descubre tatuadores profesionales en Colombia, explora portafolios reales
+      y reserva tu cita online en minutos.
+    </p>
+
+    <!-- Stats -->
+    <div class="land-hero__stats">
+      <div class="land-hero__stat">
+        <strong>{{ totalArtists() }}+</strong>
+        <span>Artistas verificados</span>
+      </div>
+      <div class="land-hero__stat-sep"></div>
+      <div class="land-hero__stat">
+        <strong>{{ totalCities() }}</strong>
+        <span>Ciudades</span>
+      </div>
+      <div class="land-hero__stat-sep"></div>
+      <div class="land-hero__stat">
+        <strong>100%</strong>
+        <span>Reserva online</span>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="land-search">
+      <div class="land-search__main">
+        <svg class="land-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          class="land-search__input"
+          type="text"
+          placeholder="Busca artista, estilo o ciudad..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault()"
+          aria-label="Buscar artista"
+        />
+        <button
+          class="land-search__clear"
+          *ngIf="searchQuery()"
+          (click)="searchQuery.set('')"
+          aria-label="Limpiar"
+        >✕</button>
+      </div>
+
+      <div class="land-search__filters">
+        <select
+          class="land-search__select"
+          [value]="filterCity()"
+          (change)="filterCity.set($any($event.target).value)"
+          aria-label="Ciudad"
+        >
+          <option value="">Todas las ciudades</option>
+          <option *ngFor="let c of cities; trackBy: trackByIdx" [value]="c">{{ c }}</option>
+        </select>
+
+        <select
+          class="land-search__select"
+          [value]="filterStyle()"
+          (change)="filterStyle.set($any($event.target).value)"
+          aria-label="Estilo"
+        >
+          <option value="">Todos los estilos</option>
+          <option *ngFor="let s of styles; trackBy: trackByIdx" [value]="s">{{ s }}</option>
+        </select>
+
+        <label class="land-search__avail">
+          <input
+            type="checkbox"
+            [checked]="filterAvail()"
+            (change)="filterAvail.set($any($event.target).checked)"
+          />
+          <span class="land-search__avail-dot"></span>
+          Solo disponibles
+        </label>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     ARTISTS GRID
+     ══════════════════════════════════════════════════ -->
+<section class="artists-sec" id="artists">
+  <div class="wrap">
+
+    <!-- Loading state -->
+    <div class="artists-loading" *ngIf="isLoading()">
+      <div class="artist-skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="artist-skeleton__cover skeleton"></div>
+        <div class="artist-skeleton__body">
+          <div class="skeleton" style="height:18px;width:65%;border-radius:3px"></div>
+          <div class="skeleton" style="height:13px;width:40%;border-radius:3px;margin-top:.5rem"></div>
+          <div class="skeleton" style="height:13px;width:80%;border-radius:3px;margin-top:.75rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div class="artists-empty" *ngIf="loadError() && !isLoading()">
+      <span class="artists-empty__icon">⚠️</span>
+      <p>{{ loadError() }}</p>
+    </div>
+
+    <!-- Results header -->
+    <div class="artists-sec__head" *ngIf="!isLoading() && !loadError()">
+      <div>
+        <h2 class="artists-sec__title">
+          <ng-container *ngIf="!hasFilters()">Artistas destacados</ng-container>
+          <ng-container *ngIf="hasFilters()">
+            {{ filteredArtists().length }}
+            {{ filteredArtists().length === 1 ? 'artista encontrado' : 'artistas encontrados' }}
+          </ng-container>
+        </h2>
+      </div>
+      <button
+        class="btn btn--ghost btn--sm"
+        *ngIf="hasFilters()"
+        (click)="clearFilters()"
+      >
+        Limpiar filtros ✕
+      </button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="artists-empty" *ngIf="filteredArtists().length === 0 && !isLoading() && !loadError()">
+      <span class="artists-empty__icon">🔍</span>
+      <p>No hay artistas con ese criterio.</p>
+      <button class="btn btn--ghost btn--sm" (click)="clearFilters()">
+        Ver todos los artistas
+      </button>
+    </div>
+
+    <!-- Grid -->
+    <div class="artists-grid" *ngIf="filteredArtists().length > 0 && !isLoading()">
+      <a
+        class="artist-card"
+        *ngFor="let a of filteredArtists(); trackBy: trackBySlug"
+        [routerLink]="['/', a.slug]"
+        [attr.aria-label]="'Ver perfil de ' + a.name"
+      >
+        <!-- Cover image / placeholder -->
+        <div class="artist-card__cover">
+          <img
+            *ngIf="a.hero_image_url"
+            [src]="a.hero_image_url"
+            [alt]="a.name"
+            class="artist-card__img"
+            loading="lazy"
+          />
+          <!-- Placeholder when no image -->
+          <div class="artist-card__placeholder" *ngIf="!a.hero_image_url">
+            <span class="artist-card__initial">{{ a.name.charAt(0) }}</span>
+          </div>
+
+          <!-- Availability badge -->
+          <div
+            class="artist-card__avail"
+            [class.artist-card__avail--busy]="!a.is_available"
+          >
+            <span class="artist-card__avail-dot"></span>
+            {{ a.is_available ? 'Disponible' : 'Ocupado' }}
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="artist-card__body">
+
+          <div class="artist-card__top">
+            <div>
+              <h3 class="artist-card__name">{{ a.name }}</h3>
+              <p class="artist-card__handle">{{ a.handle }}</p>
+            </div>
+            <!-- Rating -->
+            <div class="artist-card__rating">
+              <span class="artist-card__rating-val">{{ formatRating(a.rating_avg) }}</span>
+              <svg viewBox="0 0 12 12" fill="#C9A227" style="width:12px;height:12px">
+                <path d="M6 0l1.5 4H12L8.5 6.5 10 11 6 8.5 2 11l1.5-4.5L0 4h4.5z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- City -->
+          <p class="artist-card__city">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:12px;height:12px;flex-shrink:0">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            {{ a.city }}, Colombia
+          </p>
+
+          <!-- Styles pills -->
+          <div class="artist-card__styles">
+            <span
+              class="artist-card__style"
+              *ngFor="let s of a.styles.slice(0,3); trackBy: trackByIdx"
+            >{{ s.name }}</span>
+          </div>
+
+          <!-- Stats footer -->
+          <div class="artist-card__footer">
+            <span class="artist-card__stat">
+              🔥 {{ a.total_tattoos | number }} tatuajes
+            </span>
+            <span class="artist-card__stat">
+              ⭐ {{ a.total_reviews }} reseñas
+            </span>
+          </div>
+
+          <!-- CTA -->
+          <div class="artist-card__cta">
+            Ver perfil
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+
+        </div>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     HOW IT WORKS
+     ══════════════════════════════════════════════════ -->
+<section class="how-sec" id="how">
+  <div class="wrap">
+
+    <div class="how-sec__head">
+      <p class="eyebrow">Simple y rápido</p>
+      <div class="gold-line" style="margin:.75rem 0 1.25rem"></div>
+      <h2 class="how-sec__title">¿Cómo funciona?</h2>
+    </div>
+
+    <div class="how-steps">
+
+      <div class="how-step">
+        <div class="how-step__num">01</div>
+        <div class="how-step__icon">🔍</div>
+        <h3 class="how-step__title">Encuentra tu artista</h3>
+        <p class="how-step__desc">
+          Busca por ciudad, estilo o nombre. Explora portafolios reales y calificaciones verificadas.
+        </p>
+      </div>
+
+      <div class="how-step__arrow" aria-hidden="true">→</div>
+
+      <div class="how-step">
+        <div class="how-step__num">02</div>
+        <div class="how-step__icon">📅</div>
+        <h3 class="how-step__title">Reserva tu fecha</h3>
+        <p class="how-step__desc">
+          Elige el día disponible en el calendario del artista y completa los detalles de tu tatuaje.
+        </p>
+      </div>
+
+      <div class="how-step__arrow" aria-hidden="true">→</div>
+
+      <div class="how-step">
+        <div class="how-step__num">03</div>
+        <div class="how-step__icon">💳</div>
+        <h3 class="how-step__title">Paga el anticipo</h3>
+        <p class="how-step__desc">
+          Envía el comprobante del anticipo (50%) para confirmar y bloquear tu fecha exclusiva.
+        </p>
+      </div>
+
+      <div class="how-step__arrow" aria-hidden="true">→</div>
+
+      <div class="how-step">
+        <div class="how-step__num">04</div>
+        <div class="how-step__icon">🎨</div>
+        <h3 class="how-step__title">¡A tatuarse!</h3>
+        <p class="how-step__desc">
+          El artista confirma tu cita por WhatsApp. El saldo restante se paga el día de la sesión.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     CTA ARTISTAS
+     ══════════════════════════════════════════════════ -->
+<section class="artist-cta-sec">
+  <div class="wrap artist-cta-sec__inner">
+
+    <div class="artist-cta-sec__text">
+      <p class="eyebrow">Para tatuadores</p>
+      <h2 class="artist-cta-sec__title">¿Eres tatuador?<br><em>Únete a TATUA</em></h2>
+      <p class="artist-cta-sec__sub">
+        Crea tu página profesional, gestiona citas online y haz crecer tu negocio
+        con herramientas diseñadas para artistas colombianos.
+      </p>
+      <div class="artist-cta-sec__features">
+        <span>✦ Perfil con portafolio</span>
+        <span>✦ Agenda online 24/7</span>
+        <span>✦ Gestión de pagos</span>
+        <span>✦ Empieza gratis</span>
+      </div>
+    </div>
+
+    <div class="artist-cta-sec__action">
+      <a routerLink="/register" class="btn btn--gold btn--lg">
+        Crear mi perfil gratis →
+      </a>
+      <p class="artist-cta-sec__note">
+        Sin tarjeta de crédito · Plan gratis disponible
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════ -->
+<footer class="land-footer">
+  <div class="wrap land-footer__inner">
+
+    <div class="land-footer__brand">
+      <span class="land-footer__logo">TATUA</span>
+      <p class="land-footer__slogan">Conecta tu historia con el artista correcto</p>
+    </div>
+
+    <nav class="land-footer__links" aria-label="Footer">
+      <div class="land-footer__col">
+        <span class="land-footer__col-title">Plataforma</span>
+        <a href="#artists">Artistas</a>
+        <a href="#how">¿Cómo funciona?</a>
+        <a routerLink="/register">Para tatuadores</a>
+      </div>
+      <div class="land-footer__col">
+        <span class="land-footer__col-title">Legal</span>
+        <a href="#">Términos de uso</a>
+        <a href="#">Privacidad</a>
+        <a href="#">Políticas</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <div class="wrap land-footer__copy">
+    <span>© 2025 TATUA · Tecnología colombiana 🇨🇴</span>
+    <a routerLink="/login" class="land-footer__login">Acceso artistas</a>
+  </div>
+</footer>

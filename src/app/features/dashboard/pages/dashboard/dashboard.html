@@ -1,0 +1,889 @@
+<!-- ══════════════════════════════════════════════════
+     TATUA · Dashboard del Artista
+     ══════════════════════════════════════════════════ -->
+
+<div class="dash-layout" [class.sidebar-open]="sidebarOpen()">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="sidebar__logo">TATUA</span>
+      <span class="sidebar__artist">{{ artist.handle }}</span>
+    </div>
+
+    <nav class="sidebar__nav" role="navigation">
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'overview'"
+        (click)="goTo('overview')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span>Resumen</span>
+      </button>
+
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'bookings'"
+        (click)="goTo('bookings')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span>Citas</span>
+        <span class="sidebar__badge" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
+      </button>
+
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'payments'"
+        (click)="goTo('payments')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        <span>Pagos</span>
+        <span class="sidebar__badge sidebar__badge--warn" *ngIf="paymentCount > 0">{{ paymentCount }}</span>
+      </button>
+
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'calendar'"
+        (click)="goTo('calendar')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="12"/>
+          <line x1="12" y1="12" x2="15" y2="15"/>
+        </svg>
+        <span>Calendario</span>
+      </button>
+
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'services'"
+        (click)="goTo('services')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="12" y1="2" x2="12" y2="22"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        <span>Servicios</span>
+      </button>
+
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'portfolio'"
+        (click)="goTo('portfolio')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <span>Portafolio</span>
+        <span class="sidebar__badge" *ngIf="portfolioCount > 0" style="background:var(--bg-surface-2);color:var(--text-muted);border:1px solid var(--border)">
+          {{ portfolioCount }}/{{ maxPortfolio }}
+        </span>
+      </button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <a [routerLink]="['/', artist.slug]" class="sidebar__profile-link" target="_blank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Ver mi página
+      </a>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay mobile -->
+  <div class="sidebar-overlay" (click)="sidebarOpen.set(false)" *ngIf="sidebarOpen()"></div>
+
+  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <main class="dash-main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="topbar__menu hide-desk" (click)="sidebarOpen.set(true)" aria-label="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <div class="topbar__title">
+        <span *ngIf="activeSection() === 'overview'">Resumen</span>
+        <span *ngIf="activeSection() === 'bookings'">Gestión de citas</span>
+        <span *ngIf="activeSection() === 'payments'">Pagos pendientes</span>
+        <span *ngIf="activeSection() === 'calendar'">Calendario</span>
+        <span *ngIf="activeSection() === 'services'">Servicios y precios</span>
+        <span *ngIf="activeSection() === 'portfolio'">Mi portafolio</span>
+      </div>
+      <div class="topbar__actions">
+        <button class="btn btn--gold btn--sm" (click)="loadBookings()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Actualizar
+        </button>
+      </div>
+    </header>
+
+
+    <!-- ════════════════════════════════════════════════
+         OVERVIEW
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'overview'">
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--gold">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="kpi-card__info">
+            <span class="kpi-card__value">{{ kpis().todayBookings }}</span>
+            <span class="kpi-card__label">Citas hoy</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="9"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <circle cx="12" cy="16" r=".5" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-card__info">
+            <span class="kpi-card__value">{{ kpis().pendingBookings }}</span>
+            <span class="kpi-card__label">Solicitudes nuevas</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <div class="kpi-card__info">
+            <span class="kpi-card__value">{{ kpis().pendingPayments }}</span>
+            <span class="kpi-card__label">Pagos por verificar</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon kpi-card__icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="12" y1="2" x2="12" y2="22"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div class="kpi-card__info">
+            <span class="kpi-card__value">{{ formatCOP(kpis().monthRevenue) }}</span>
+            <span class="kpi-card__label">Ingresos del mes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Citas de hoy -->
+      <div class="dash-card">
+        <div class="dash-card__head">
+          <h2 class="dash-card__title">Citas de hoy</h2>
+          <span class="dash-card__count">{{ todayBookings().length }}</span>
+        </div>
+
+        <div class="empty-state" *ngIf="todayBookings().length === 0">
+          <span class="empty-state__icon">📅</span>
+          <p>No hay citas programadas para hoy</p>
+        </div>
+
+        <div class="booking-list" *ngIf="todayBookings().length > 0">
+          <div
+            class="booking-row"
+            *ngFor="let b of todayBookings(); trackBy: trackById"
+            (click)="openDetail(b)"
+          >
+            <div class="booking-row__state-dot" [style.background]="stateColor[b.state]"></div>
+            <div class="booking-row__info">
+              <strong>{{ b.client?.name ?? '—' }}</strong>
+              <span>{{ b.type?.name ?? '—' }}</span>
+            </div>
+            <div class="booking-row__num">{{ b.booking_number }}</div>
+            <div class="booking-row__state" [style.color]="stateColor[b.state]">
+              {{ stateLabel[b.state] }}
+            </div>
+            <div class="booking-row__actions">
+              <button class="icon-btn" (click)="$event.stopPropagation(); openWhatsapp(b)" title="WhatsApp">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:#25D366">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solicitudes pendientes -->
+      <div class="dash-card" *ngIf="kpis().pendingBookings > 0">
+        <div class="dash-card__head">
+          <h2 class="dash-card__title">Solicitudes nuevas</h2>
+          <span class="dash-card__count dash-card__count--warn">{{ kpis().pendingBookings }}</span>
+        </div>
+        <div class="booking-list">
+          <div
+            class="booking-row"
+            *ngFor="let b of filteredBookings() | slice:0:5; trackBy: trackById"
+          >
+            <div class="booking-row__state-dot" [style.background]="stateColor[b.state]"></div>
+            <div class="booking-row__info">
+              <strong>{{ b.client?.name ?? '—' }}</strong>
+              <span>{{ b.type?.name ?? '—' }} · {{ formatDate(b.booked_date) }}</span>
+            </div>
+            <div class="booking-row__num">{{ b.booking_number }}</div>
+            <div class="booking-row__actions" (click)="$event.stopPropagation()">
+              <button class="icon-btn icon-btn--wa" (click)="openWhatsapp(b)" title="WhatsApp">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+                </svg>
+              </button>
+              <button class="btn btn--sm" style="background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.3)"
+                [disabled]="isActioning(b.id)"
+                (click)="confirmBooking(b)">
+                Confirmar
+              </button>
+              <button class="btn btn--sm" style="background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.3)"
+                [disabled]="isActioning(b.id)"
+                (click)="rejectBooking(b)">
+                Rechazar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════
+         BOOKINGS
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'bookings'">
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <input
+          class="f-input filters-bar__search"
+          type="text"
+          placeholder="Buscar por cliente o número..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+        <select class="f-select" [value]="filterState()" (change)="filterState.set($any($event.target).value)">
+          <option value="">Todos los estados</option>
+          <option *ngFor="let s of allStates" [value]="s">{{ stateLabel[s] }}</option>
+        </select>
+        <input
+          class="f-input"
+          type="date"
+          [value]="filterDate()"
+          (change)="filterDate.set($any($event.target).value)"
+        />
+        <button class="btn btn--ghost btn--sm" (click)="filterState.set(''); filterDate.set(''); searchQuery.set('')">
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="dash-card">
+        <div class="empty-state" *ngIf="filteredBookings().length === 0">
+          <span class="empty-state__icon">🔍</span>
+          <p>No hay citas con ese criterio</p>
+        </div>
+
+        <div class="bookings-table" *ngIf="filteredBookings().length > 0">
+          <div class="bookings-table__head">
+            <span>N° Cita</span>
+            <span>Cliente</span>
+            <span>Tipo</span>
+            <span>Fecha</span>
+            <span>Estado</span>
+            <span>Anticipo</span>
+            <span>Acciones</span>
+          </div>
+
+          <div
+            class="bookings-table__row"
+            *ngFor="let b of filteredBookings(); trackBy: trackById"
+            (click)="openDetail(b)"
+          >
+            <span class="bookings-table__num">{{ b.booking_number }}</span>
+
+            <div class="bookings-table__client">
+              <strong>{{ b.client?.name ?? '—' }}</strong>
+              <span>{{ b.client?.whatsapp ?? '' }}</span>
+            </div>
+
+            <span>{{ b.type?.name ?? '—' }}</span>
+
+            <span>{{ formatDate(b.booked_date) }}</span>
+
+            <span
+              class="state-pill"
+              [style.background]="stateColor[b.state] + '18'"
+              [style.color]="stateColor[b.state]"
+              [style.border]="'1px solid ' + stateColor[b.state] + '44'"
+            >{{ stateLabel[b.state] }}</span>
+
+            <span>{{ formatCOP(b.deposit_amount) }}</span>
+
+            <div class="bookings-table__actions" (click)="$event.stopPropagation()">
+              <!-- WhatsApp -->
+              <button class="icon-btn icon-btn--wa" (click)="openWhatsapp(b)" title="WhatsApp">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+                </svg>
+              </button>
+
+              <!-- Confirm when awaiting payment -->
+              <button
+                *ngIf="canConfirm(b)"
+                class="btn btn--sm"
+                style="background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.3)"
+                [disabled]="isActioning(b.id)"
+                (click)="confirmBooking(b)"
+              >Confirmar</button>
+
+              <!-- Mark in progress -->
+              <button
+                *ngIf="canInProgress(b)"
+                class="btn btn--sm"
+                style="background:rgba(52,152,219,.12);color:#3498db;border:1px solid rgba(52,152,219,.3)"
+                [disabled]="isActioning(b.id)"
+                (click)="markInProgress(b)"
+              >En curso</button>
+
+              <!-- Mark completed -->
+              <button
+                *ngIf="canComplete(b)"
+                class="btn btn--sm"
+                style="background:rgba(39,174,96,.12);color:#27ae60;border:1px solid rgba(39,174,96,.3)"
+                [disabled]="isActioning(b.id)"
+                (click)="markCompleted(b)"
+              >Completar</button>
+
+              <!-- Reject -->
+              <button
+                *ngIf="canReject(b)"
+                class="icon-btn icon-btn--danger"
+                [disabled]="isActioning(b.id)"
+                (click)="rejectBooking(b)"
+                title="Rechazar"
+              >✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════
+         PAYMENTS
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'payments'">
+
+      <div class="dash-card">
+        <div class="dash-card__head">
+          <h2 class="dash-card__title">Comprobantes por verificar</h2>
+          <span class="dash-card__count dash-card__count--warn">{{ pendingPaymentsList().length }}</span>
+        </div>
+
+        <div class="empty-state" *ngIf="pendingPaymentsList().length === 0">
+          <span class="empty-state__icon">✅</span>
+          <p>No hay pagos pendientes de verificación</p>
+        </div>
+
+        <div class="payments-list" *ngIf="pendingPaymentsList().length > 0">
+          <div
+            class="payment-card"
+            *ngFor="let b of pendingPaymentsList(); trackBy: trackById"
+          >
+            <div class="payment-card__header">
+              <div>
+                <strong class="payment-card__client">{{ b.client?.name ?? '—' }}</strong>
+                <span class="payment-card__num">{{ b.booking_number }}</span>
+              </div>
+              <span class="payment-card__amount">{{ formatCOP(b.deposit_amount) }}</span>
+            </div>
+
+            <div class="payment-card__details">
+              <span>📅 {{ formatDate(b.booked_date) }}</span>
+              <span>🎨 {{ b.type?.name ?? '—' }}</span>
+              <span *ngIf="b.zone">📍 {{ b.zone.name }}</span>
+            </div>
+
+            <!-- Payment proofs -->
+            <div class="payment-proofs" *ngIf="b.payments && b.payments.length > 0">
+              <div class="payment-proof" *ngFor="let p of b.payments">
+                <div class="payment-proof__info">
+                  <span class="payment-proof__method">{{ p.method?.name }}</span>
+                  <span class="payment-proof__amount">{{ formatCOP(p.amount) }}</span>
+                  <span class="payment-proof__status" [class.verified]="p.is_verified">
+                    {{ p.is_verified ? '✓ Verificado' : '⏳ Pendiente' }}
+                  </span>
+                </div>
+                <div class="payment-proof__actions">
+                  <a
+                    *ngIf="p.receipt_url"
+                    [href]="p.receipt_url"
+                    target="_blank"
+                    class="btn btn--ghost btn--sm"
+                  >Ver comprobante ↗</a>
+                  <button
+                    *ngIf="!p.is_verified"
+                    class="btn btn--sm"
+                    style="background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.3)"
+                    (click)="verifyPayment(p.id, b.id)"
+                  >
+                    Verificar y confirmar cita
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- No payment registered yet -->
+            <div class="no-proof" *ngIf="!b.payments || b.payments.length === 0">
+              <span>⏳ El cliente aún no ha registrado el comprobante</span>
+              <button class="btn btn--ghost btn--sm" (click)="openWhatsapp(b)">
+                Recordar por WhatsApp
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════
+         CALENDAR
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'calendar'">
+
+      <div class="dash-card cal-card">
+        <div class="cal-header">
+          <button class="cal-nav" (click)="prevMonth()">‹</button>
+          <h2 class="cal-title">{{ calMonthLabel() }}</h2>
+          <button class="cal-nav" (click)="nextMonth()">›</button>
+        </div>
+
+        <div class="cal-grid">
+          <div class="cal-dow" *ngFor="let d of dow; trackBy: trackByIdx">{{ d }}</div>
+
+          <div
+            class="cal-cell"
+            *ngFor="let cell of calCells(); trackBy: trackByIdx"
+            [class.cal-cell--empty]="cell.day === null"
+            [class.cal-cell--available]="cell.state === 'available'"
+            [class.cal-cell--busy]="cell.state === 'busy'"
+            [class.cal-cell--blocked]="cell.state === 'blocked'"
+            [class.cal-cell--today]="cell.date === todayStr"
+          >
+            <span *ngIf="cell.day">{{ cell.day }}</span>
+          </div>
+        </div>
+
+        <div class="cal-legend">
+          <div class="cal-leg"><span class="cal-leg__dot" style="background:#2ecc71"></span>Disponible</div>
+          <div class="cal-leg"><span class="cal-leg__dot" style="background:#e74c3c"></span>Ocupado</div>
+          <div class="cal-leg"><span class="cal-leg__dot" style="background:#555"></span>Bloqueado</div>
+          <div class="cal-leg"><span class="cal-leg__dot" style="background:#C9A227;outline:2px solid #C9A227;outline-offset:2px"></span>Hoy</div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- ════════════════════════════════════════════════
+         SERVICES
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'services'">
+
+      <div class="dash-card">
+        <div class="dash-card__head">
+          <h2 class="dash-card__title">Servicios y precios</h2>
+          <button class="btn btn--gold btn--sm" (click)="addService()">
+            + Agregar servicio
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="empty-state" *ngIf="servicesLoading()">
+          <span class="empty-state__icon">⏳</span>
+          <p>Cargando servicios...</p>
+        </div>
+
+        <!-- Empty -->
+        <div class="empty-state" *ngIf="!servicesLoading() && services().length === 0">
+          <span class="empty-state__icon">💰</span>
+          <p>Aún no has agregado servicios</p>
+          <button class="btn btn--gold btn--sm" (click)="addService()">Agregar primero</button>
+        </div>
+
+        <!-- Services list -->
+        <div class="services-editor" *ngIf="services().length > 0">
+          <div
+            class="service-row-edit"
+            *ngFor="let s of services(); let i = index; trackBy: trackByIdx"
+            [class.service-row-edit--dirty]="s.isDirty"
+          >
+            <!-- Row header -->
+            <div class="service-row-edit__head">
+              <span class="service-row-edit__num">#{{ i + 1 }}</span>
+              <span class="service-row-edit__dirty" *ngIf="s.isDirty">● Sin guardar</span>
+              <button class="icon-btn icon-btn--danger" (click)="removeService(i)" title="Eliminar">✕</button>
+            </div>
+
+            <!-- Fields grid -->
+            <div class="service-edit-grid">
+
+              <div class="f-group service-edit-grid__full">
+                <label class="f-label">Nombre del servicio *</label>
+                <input class="f-input" type="text" placeholder="Ej: Tatuaje pequeño"
+                  [(ngModel)]="s.name" (ngModelChange)="markDirty(i)"/>
+              </div>
+
+              <div class="f-group service-edit-grid__full">
+                <label class="f-label">Descripción</label>
+                <input class="f-input" type="text" placeholder="Ej: Hasta 5 cm. Flash o diseño simple."
+                  [(ngModel)]="s.description" (ngModelChange)="markDirty(i)"/>
+              </div>
+
+              <div class="f-group">
+                <label class="f-label">Precio desde (COP)</label>
+                <input class="f-input" type="number" min="0" placeholder="150000"
+                  [disabled]="s.is_quote_only"
+                  [ngModel]="s.price_from"
+                  (ngModelChange)="s.price_from = $event; markDirty(i)"/>
+              </div>
+
+              <div class="f-group">
+                <label class="f-label">Badge</label>
+                <select class="f-select" [(ngModel)]="s.badge" (ngModelChange)="markDirty(i)">
+                  <option value="Desde">Desde</option>
+                  <option value="Personalizado">Personalizado</option>
+                  <option value="Proyecto">Proyecto</option>
+                </select>
+              </div>
+
+              <!-- Quote toggle -->
+              <div class="quote-toggle service-edit-grid__full">
+                <label class="quote-toggle__label">
+                  <div
+                    class="toggle"
+                    [class.toggle--on]="s.is_quote_only"
+                    (click)="toggleQuote(i)"
+                    role="switch"
+                    [attr.aria-checked]="s.is_quote_only"
+                  >
+                    <span class="toggle__knob"></span>
+                  </div>
+                  <span>Solo cotización (sin precio fijo)</span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <div class="dash-card__footer" *ngIf="services().length > 0">
+          <span class="dash-card__footer-note" *ngIf="services().some(s => s.isDirty)">
+            Tienes cambios sin guardar
+          </span>
+          <button class="btn btn--gold" [disabled]="servicesSaving()" (click)="saveServices()">
+            <span *ngIf="!servicesSaving()">Guardar cambios</span>
+            <span *ngIf="servicesSaving()">Guardando...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════
+         PORTFOLIO
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'portfolio'">
+
+      <div class="dash-card">
+        <div class="dash-card__head">
+          <h2 class="dash-card__title">Mi portafolio</h2>
+          <span class="dash-card__count" [class.dash-card__count--warn]="portfolioFull">
+            {{ portfolioCount }} / {{ maxPortfolio }} trabajos
+          </span>
+        </div>
+
+        <!-- Limit notice -->
+        <div class="port-limit-notice" *ngIf="portfolioFull">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px;flex-shrink:0">
+            <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <circle cx="12" cy="16" r=".5" fill="currentColor"/>
+          </svg>
+          Portafolio completo. Elimina un trabajo para agregar uno nuevo.
+        </div>
+
+        <!-- Loading -->
+        <div class="empty-state" *ngIf="portfolioLoading()">
+          <span class="empty-state__icon">⏳</span>
+          <p>Cargando portafolio...</p>
+        </div>
+
+        <!-- Portfolio grid -->
+        <div class="port-editor" *ngIf="!portfolioLoading()">
+
+          <!-- Existing + new items -->
+          <div class="port-editor__grid">
+            <div
+              class="port-editor__item"
+              *ngFor="let p of portfolio(); let i = index; trackBy: trackByIdx"
+              [class.port-editor__item--new]="p.isNew"
+            >
+              <!-- Image -->
+              <div class="port-editor__img-wrap">
+                <img
+                  [src]="p.preview || p.image_url"
+                  [alt]="p.title || 'Trabajo ' + (i+1)"
+                  class="port-editor__img"
+                />
+                <div class="port-editor__overlay">
+                  <button class="port-editor__remove" (click)="removePortfolio(i)" title="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                    </svg>
+                  </button>
+                </div>
+                <span class="port-editor__new-badge" *ngIf="p.isNew">Nuevo</span>
+              </div>
+
+              <!-- Fields -->
+              <div class="port-editor__fields">
+                <input
+                  class="f-input port-editor__input"
+                  type="text"
+                  placeholder="Título del trabajo"
+                  [value]="p.title"
+                  (input)="updatePortfolioTitle(i, $any($event.target).value)"
+                />
+                <div class="port-editor__duration">
+                  <input
+                    class="f-input port-editor__input"
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    placeholder="Horas"
+                    [ngModel]="p.duration_hours"
+                    (ngModelChange)="updatePortfolioDuration(i, $event)"
+                  />
+                  <span class="port-editor__duration-label">horas</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Drop zone — only show if not full -->
+            <div
+              class="port-editor__dropzone"
+              *ngIf="!portfolioFull"
+              [class.port-editor__dropzone--active]="dragOverPort()"
+              (dragover)="$event.preventDefault(); dragOverPort.set(true)"
+              (dragleave)="dragOverPort.set(false)"
+              (drop)="onPortfolioDrop($event)"
+              (click)="portInput.click()"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text-dim)">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <p class="port-editor__dropzone-text">
+                Arrastra fotos o <span style="color:var(--gold)">haz clic</span>
+              </p>
+              <p class="port-editor__dropzone-hint">
+                Quedan {{ maxPortfolio - portfolioCount }} espacio(s)
+              </p>
+            </div>
+          </div>
+
+          <input #portInput type="file" accept="image/*" multiple style="display:none"
+            (change)="onPortfolioFiles($event)"/>
+
+        </div>
+
+        <!-- Save -->
+        <div class="dash-card__footer" *ngIf="portfolio().some(p => p.isNew)">
+          <span class="dash-card__footer-note">
+            {{ portfolio().filter(p => p.isNew).length }} imagen(es) nueva(s) sin subir
+          </span>
+          <button class="btn btn--gold" [disabled]="portfolioSaving()" (click)="savePortfolio()">
+            <span *ngIf="!portfolioSaving()">Subir imágenes</span>
+            <span *ngIf="portfolioSaving()">Subiendo...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     BOOKING DETAIL PANEL (slide-in)
+     ══════════════════════════════════════════════════ -->
+<div class="detail-overlay" *ngIf="detailOpen()" (click)="closeDetail()">
+  <div class="detail-panel" (click)="$event.stopPropagation()" *ngIf="selectedBooking() as b">
+
+    <div class="detail-panel__head">
+      <div>
+        <p class="eyebrow" style="margin-bottom:.25rem">Detalle de cita</p>
+        <strong class="detail-num">{{ b.booking_number }}</strong>
+      </div>
+      <button class="icon-btn" (click)="closeDetail()">✕</button>
+    </div>
+
+    <div class="detail-panel__body">
+
+      <!-- State badge -->
+      <div class="detail-state"
+        [style.background]="stateColor[b.state] + '15'"
+        [style.color]="stateColor[b.state]"
+        [style.border]="'1px solid ' + stateColor[b.state] + '40'"
+      >
+        {{ stateLabel[b.state] }}
+      </div>
+
+      <!-- Client info -->
+      <div class="detail-section">
+        <p class="detail-section__title">Cliente</p>
+        <div class="detail-info-grid">
+          <span class="label">Nombre</span>     <span>{{ b.client?.name ?? '—' }}</span>
+          <span class="label">WhatsApp</span>   <span>{{ b.client?.whatsapp ?? '—' }}</span>
+          <span class="label">Email</span>      <span>{{ b.client?.email ?? '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Booking info -->
+      <div class="detail-section">
+        <p class="detail-section__title">Detalles del tatuaje</p>
+        <div class="detail-info-grid">
+          <span class="label">Tipo</span>        <span>{{ b.type?.name ?? '—' }}</span>
+          <span class="label">Estilo</span>       <span>{{ b.style?.name ?? '—' }}</span>
+          <span class="label">Zona</span>         <span>{{ b.zone?.name ?? '—' }}</span>
+          <span class="label">Tamaño</span>       <span>{{ b.size?.name ?? '—' }}</span>
+          <span class="label">Fecha deseada</span><span>{{ formatDate(b.booked_date) }}</span>
+        </div>
+        <div class="detail-desc" *ngIf="b.description">
+          <p class="label" style="margin-bottom:.4rem">Descripción</p>
+          <p>{{ b.description }}</p>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="detail-section">
+        <p class="detail-section__title">Precios</p>
+
+        <div class="f-group">
+          <label class="f-label">Precio estimado (COP)</label>
+          <input class="f-input" type="number" min="0"
+            [value]="editPrice()"
+            (input)="editPrice.set(+$any($event.target).value)"
+            placeholder="0"
+          />
+        </div>
+
+        <div class="detail-info-grid" style="margin-top:.75rem">
+          <span class="label">Anticipo ({{ b.deposit_percent }}%)</span>
+          <span>{{ formatCOP(editPrice() ? editPrice()! * b.deposit_percent / 100 : b.deposit_amount) }}</span>
+          <span class="label">Precio final</span>
+          <span>{{ formatCOP(b.final_price) }}</span>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="detail-section">
+        <p class="detail-section__title">Notas internas</p>
+        <textarea
+          class="f-textarea"
+          rows="3"
+          placeholder="Notas privadas del artista (no visibles al cliente)..."
+          [value]="editNotes()"
+          (input)="editNotes.set($any($event.target).value)"
+        ></textarea>
+        <button class="btn btn--gold btn--sm btn--full" style="margin-top:.75rem" (click)="saveNotes()">
+          Guardar cambios
+        </button>
+      </div>
+
+      <!-- Actions -->
+      <div class="detail-section">
+        <p class="detail-section__title">Acciones</p>
+        <div class="detail-actions">
+          <button class="btn btn--full" style="background:rgba(37,211,102,.12);color:#25D366;border:1px solid rgba(37,211,102,.3)"
+            (click)="openWhatsapp(b)">
+            WhatsApp al cliente
+          </button>
+          <button *ngIf="canConfirm(b)" class="btn btn--full"
+            style="background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.3)"
+            [disabled]="isActioning(b.id)"
+            (click)="confirmBooking(b)">
+            Confirmar cita
+          </button>
+          <button *ngIf="canInProgress(b)" class="btn btn--full"
+            style="background:rgba(52,152,219,.12);color:#3498db;border:1px solid rgba(52,152,219,.3)"
+            [disabled]="isActioning(b.id)"
+            (click)="markInProgress(b)">
+            Marcar en curso
+          </button>
+          <button *ngIf="canComplete(b)" class="btn btn--full"
+            style="background:rgba(39,174,96,.12);color:#27ae60;border:1px solid rgba(39,174,96,.3)"
+            [disabled]="isActioning(b.id)"
+            (click)="markCompleted(b)">
+            Marcar como realizada
+          </button>
+          <button *ngIf="canReject(b)" class="btn btn--full"
+            style="background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.3)"
+            [disabled]="isActioning(b.id)"
+            (click)="rejectBooking(b); closeDetail()">
+            Rechazar / Cancelar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ── TOAST ──────────────────────────────────────────────── -->
+<aside
+  class="dash-toast"
+  [class.dash-toast--show]="toast() !== null"
+  [class.dash-toast--error]="toast()?.kind === 'error'"
+  *ngIf="toast() as t"
+  role="alert"
+>
+  <strong>{{ t.title }}</strong>
+  <span>{{ t.msg }}</span>
+</aside>
