@@ -77,6 +77,19 @@
 
       <button
         class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'payment-methods'"
+        (click)="goTo('payment-methods')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <path d="M2 10h20"/>
+          <path d="M6 15h4"/>
+        </svg>
+        <span>Mis pagos</span>
+      </button>
+
+      <button
+        class="sidebar__item"
         [class.sidebar__item--active]="activeSection() === 'portfolio'"
         (click)="goTo('portfolio')"
       >
@@ -90,6 +103,18 @@
           {{ portfolioCount }}/{{ maxPortfolio }}
         </span>
       </button>
+      <button
+        class="sidebar__item"
+        [class.sidebar__item--active]="activeSection() === 'profile'"
+        (click)="goTo('profile')"
+      >
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Mi perfil</span>
+      </button>
+
     </nav>
 
     <div class="sidebar__footer">
@@ -100,6 +125,15 @@
         </svg>
         Ver mi página
       </a>
+
+      <button class="sidebar__logout" (click)="logout()" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Cerrar sesión
+      </button>
     </div>
   </aside>
 
@@ -123,6 +157,8 @@
         <span *ngIf="activeSection() === 'calendar'">Calendario</span>
         <span *ngIf="activeSection() === 'services'">Servicios y precios</span>
         <span *ngIf="activeSection() === 'portfolio'">Mi portafolio</span>
+        <span *ngIf="activeSection() === 'payment-methods'">Mis métodos de pago</span>
+        <span *ngIf="activeSection() === 'profile'">Mi perfil</span>
       </div>
       <div class="topbar__actions">
         <button class="btn btn--gold btn--sm" (click)="loadBookings()">
@@ -743,6 +779,353 @@
           </button>
         </div>
       </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════
+         PAYMENT METHODS
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'payment-methods'">
+
+      <div class="dash-card">
+        <div class="dash-card__head">
+          <div>
+            <h2 class="dash-card__title">Mis métodos de pago</h2>
+            <p style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem">
+              El cliente verá estos datos para enviar el anticipo
+            </p>
+          </div>
+          <button class="btn btn--gold btn--sm" (click)="addPaymentMethod()">
+            + Agregar
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="empty-state" *ngIf="pmLoading()">
+          <span class="empty-state__icon">⏳</span><p>Cargando...</p>
+        </div>
+
+        <!-- Empty -->
+        <div class="empty-state" *ngIf="!pmLoading() && paymentMethods().length === 0">
+          <span class="empty-state__icon">💳</span>
+          <p>No has configurado métodos de pago</p>
+          <button class="btn btn--gold btn--sm" (click)="addPaymentMethod()">Agregar primero</button>
+        </div>
+
+        <!-- List -->
+        <div class="pm-editor" *ngIf="paymentMethods().length > 0">
+          <div
+            class="pm-row"
+            *ngFor="let m of paymentMethods(); let i = index; trackBy: trackByIdx"
+            [class.pm-row--dirty]="m.isDirty"
+          >
+            <div class="pm-row__fields">
+              <div class="f-group">
+                <label class="f-label">Nombre</label>
+                <select class="f-select" [(ngModel)]="m.name" (ngModelChange)="markPmDirty(i)">
+                  <option value="Bancolombia">Bancolombia</option>
+                  <option value="Nequi">Nequi</option>
+                  <option value="Daviplata">Daviplata</option>
+                  <option value="Datáfono">Datáfono</option>
+                  <option value="Transferencia bancaria">Transferencia bancaria</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="f-group">
+                <label class="f-label">Datos (número, cuenta, etc.)</label>
+                <input class="f-input" type="text"
+                  placeholder="Ej: 311 675 5857 · A nombre de Jose Tatto"
+                  [(ngModel)]="m.detail" (ngModelChange)="markPmDirty(i)"/>
+              </div>
+            </div>
+            <div class="pm-row__actions">
+              <span class="pm-row__dirty" *ngIf="m.isDirty">● Sin guardar</span>
+              <button class="icon-btn icon-btn--danger" (click)="removePaymentMethod(i)" title="Eliminar">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save -->
+        <div class="dash-card__footer" *ngIf="paymentMethods().length > 0">
+          <span class="dash-card__footer-note" *ngIf="paymentMethods().some(m => m.isDirty)">
+            Tienes cambios sin guardar
+          </span>
+          <button class="btn btn--gold" [disabled]="pmSaving()" (click)="savePaymentMethods()">
+            <span *ngIf="!pmSaving()">Guardar cambios</span>
+            <span *ngIf="pmSaving()">Guardando...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════
+         PROFILE EDITOR
+         ════════════════════════════════════════════════ -->
+    <div class="section-content" *ngIf="activeSection() === 'profile'">
+
+      <!-- Loading -->
+      <div class="empty-state" *ngIf="profileLoading()">
+        <span class="empty-state__icon">⏳</span><p>Cargando perfil...</p>
+      </div>
+
+      <ng-container *ngIf="!profileLoading()">
+
+        <!-- ── Hero image ───────────────────────────────── -->
+        <div class="dash-card">
+          <div class="dash-card__head">
+            <h2 class="dash-card__title">Foto de fondo</h2>
+            <p style="font-size:.72rem;color:var(--text-muted)">Aparece en tu página pública</p>
+          </div>
+
+          <div class="profile-hero-section">
+
+            <!-- Current / Preview -->
+            <div class="profile-hero-preview">
+              <img
+                *ngIf="heroPreview() || profileForm().hero_image_url"
+                [src]="heroPreview() || profileForm().hero_image_url"
+                alt="Foto de fondo"
+                class="profile-hero-img"
+              />
+              <div class="profile-hero-empty" *ngIf="!heroPreview() && !profileForm().hero_image_url">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;color:var(--text-dim)">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>Sin foto de fondo</span>
+              </div>
+              <!-- New badge -->
+              <div class="profile-hero-new" *ngIf="heroPreview()">Nueva foto (sin guardar)</div>
+            </div>
+
+            <!-- Upload controls -->
+            <div class="profile-hero-controls">
+              <p style="font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:1rem">
+                Recomendado: mínimo 1200px de ancho, formato JPG o PNG. Aparece como fondo en tu página pública.
+              </p>
+              <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+                <label class="btn btn--outline btn--sm" style="cursor:pointer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Seleccionar foto
+                  <input type="file" accept="image/*" style="display:none" (change)="onHeroChange($event)"/>
+                </label>
+                <button
+                  class="btn btn--gold btn--sm"
+                  *ngIf="heroFile()"
+                  [disabled]="profileSaving()"
+                  (click)="uploadHero()"
+                >
+                  <span *ngIf="!profileSaving()">Subir foto</span>
+                  <span *ngIf="profileSaving()">Subiendo...</span>
+                </button>
+                <button
+                  class="btn btn--ghost btn--sm"
+                  *ngIf="heroPreview()"
+                  (click)="removeHeroPreview()"
+                >Cancelar</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Basic info ────────────────────────────────── -->
+        <div class="dash-card">
+          <div class="dash-card__head">
+            <h2 class="dash-card__title">Información básica</h2>
+            <span class="dash-card__count" *ngIf="profileDirty()" style="background:rgba(201,162,39,.1);color:var(--gold);border-color:var(--gold-dim)">
+              ● Sin guardar
+            </span>
+          </div>
+
+          <div class="profile-form">
+
+            <!-- Row: name + handle -->
+            <div class="profile-form__row">
+              <div class="f-group">
+                <label class="f-label">Nombre artístico</label>
+                <input class="f-input"
+                  type="text"
+                  placeholder="Jose Tatto"
+                  [ngModel]="profileForm().name"
+                  (ngModelChange)="updateProfile('name', $event)"
+                />
+              </div>
+              <div class="f-group">
+                <label class="f-label">Handle</label>
+                <div class="f-prefix-wrap">
+                  <span class="f-prefix">@</span>
+                  <input class="f-input f-input--sm-prefix"
+                    type="text"
+                    placeholder="josetatto"
+                    [ngModel]="profileForm().handle.replace('@','')"
+                    (ngModelChange)="updateProfile('handle', '@' + $event)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Tagline -->
+            <div class="f-group">
+              <label class="f-label">Frase de presentación (tagline)</label>
+              <input class="f-input"
+                type="text"
+                placeholder="Ej: Arte que permanece. Historias grabadas en piel."
+                maxlength="120"
+                [ngModel]="profileForm().tagline"
+                (ngModelChange)="updateProfile('tagline', $event)"
+              />
+              <p class="f-hint">{{ profileForm().tagline.length }}/120 · Aparece debajo de tu nombre en el hero</p>
+            </div>
+
+            <!-- Bio -->
+            <div class="f-group">
+              <label class="f-label">Biografía</label>
+              <textarea class="f-textarea"
+                rows="4"
+                placeholder="Cuéntales a tus clientes sobre ti, tu trayectoria y tu estilo..."
+                maxlength="600"
+                [ngModel]="profileForm().bio"
+                (ngModelChange)="updateProfile('bio', $event)"
+              ></textarea>
+              <p class="f-hint">{{ profileForm().bio.length }}/600</p>
+            </div>
+
+            <!-- Row: city + year -->
+            <div class="profile-form__row">
+              <div class="f-group">
+                <label class="f-label">Ciudad</label>
+                <select class="f-select"
+                  [ngModel]="profileForm().city_id"
+                  (ngModelChange)="updateProfile('city_id', +$event)"
+                >
+                  <option [ngValue]="null">Seleccionar</option>
+                  <option *ngFor="let c of cities(); trackBy: trackByIdx" [value]="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+              <div class="f-group">
+                <label class="f-label">Tatuando desde</label>
+                <select class="f-select"
+                  [ngModel]="profileForm().year_started"
+                  (ngModelChange)="updateProfile('year_started', +$event || null)"
+                >
+                  <option [ngValue]="null">Seleccionar año</option>
+                  <option *ngFor="let y of yearOptions; trackBy: trackByIdx" [value]="y">{{ y }}</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Contact & social ──────────────────────────── -->
+        <div class="dash-card">
+          <div class="dash-card__head">
+            <h2 class="dash-card__title">Contacto y redes sociales</h2>
+          </div>
+
+          <div class="profile-form">
+
+            <!-- WhatsApp -->
+            <div class="f-group">
+              <label class="f-label">WhatsApp</label>
+              <div class="f-prefix-wrap">
+                <svg class="f-prefix-icon" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:#25D366">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+                </svg>
+                <input class="f-input f-input--icon"
+                  type="tel"
+                  placeholder="573116755857 (con código de país)"
+                  [ngModel]="profileForm().whatsapp"
+                  (ngModelChange)="updateProfile('whatsapp', $event)"
+                />
+              </div>
+            </div>
+
+            <div class="profile-socials-grid">
+
+              <!-- Instagram -->
+              <div class="f-group">
+                <label class="f-label">
+                  <span class="social-label social-label--ig">Instagram</span>
+                </label>
+                <div class="f-prefix-wrap">
+                  <span class="f-prefix">@</span>
+                  <input class="f-input f-input--sm-prefix"
+                    type="text"
+                    placeholder="josetatto"
+                    [ngModel]="profileForm().instagram"
+                    (ngModelChange)="updateProfile('instagram', $event)"
+                  />
+                </div>
+              </div>
+
+              <!-- Facebook -->
+              <div class="f-group">
+                <label class="f-label">
+                  <span class="social-label social-label--fb">Facebook</span>
+                </label>
+                <div class="f-prefix-wrap">
+                  <span class="f-prefix">fb/</span>
+                  <input class="f-input f-input--sm-prefix"
+                    type="text"
+                    placeholder="josetatto"
+                    [ngModel]="profileForm().facebook"
+                    (ngModelChange)="updateProfile('facebook', $event)"
+                  />
+                </div>
+              </div>
+
+              <!-- TikTok -->
+              <div class="f-group">
+                <label class="f-label">
+                  <span class="social-label social-label--tk">TikTok</span>
+                </label>
+                <div class="f-prefix-wrap">
+                  <span class="f-prefix">@</span>
+                  <input class="f-input f-input--sm-prefix"
+                    type="text"
+                    placeholder="josetatto"
+                    [ngModel]="profileForm().tiktok"
+                    (ngModelChange)="updateProfile('tiktok', $event)"
+                  />
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Save -->
+          <div class="dash-card__footer">
+            <span class="dash-card__footer-note" *ngIf="profileDirty()">
+              Tienes cambios sin guardar
+            </span>
+            <a
+              [routerLink]="['/', artist.slug]"
+              class="btn btn--ghost btn--sm"
+              target="_blank"
+            >
+              Ver mi página ↗
+            </a>
+            <button
+              class="btn btn--gold"
+              [disabled]="profileSaving() || !profileDirty()"
+              (click)="saveProfile()"
+            >
+              <span *ngIf="!profileSaving()">Guardar cambios</span>
+              <span *ngIf="profileSaving()">Guardando...</span>
+            </button>
+          </div>
+        </div>
+
+      </ng-container>
     </div>
 
   </main>

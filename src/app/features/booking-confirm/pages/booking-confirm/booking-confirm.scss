@@ -512,3 +512,35 @@
     flex-shrink: 0;
   }
 }
+
+// ── Payment methods loading/empty ──────────────────
+.pay-loading {
+  padding: 1.25rem;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+}
+
+.pay-empty {
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: .82rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+
+  p + p { margin-top: .4rem; }
+}
+
+.pay-section__sub {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: -.25rem;
+  margin-bottom: .5rem;
+
+  strong { color: var(--text); }
+}

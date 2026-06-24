@@ -1,20 +1,20 @@
+<!-- TATUA · Login -->
 <div class="auth-page">
 
   <div class="auth-box">
 
-    <!-- Brand -->
     <div class="auth-box__brand">
       <span class="auth-logo">TATUA</span>
       <p class="auth-tagline">Panel del artista</p>
     </div>
 
-    <!-- Form -->
     <div class="auth-form">
       <h1 class="auth-form__title">Ingresar</h1>
 
       <!-- Error -->
       <div class="auth-error" *ngIf="errorMsg()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          style="width:16px;height:16px;flex-shrink:0">
           <circle cx="12" cy="12" r="9"/>
           <line x1="12" y1="8" x2="12" y2="12"/>
           <circle cx="12" cy="16" r=".5" fill="currentColor"/>
@@ -22,21 +22,18 @@
         {{ errorMsg() }}
       </div>
 
-      <!-- Slug -->
+      <!-- Email -->
       <div class="f-group">
-        <label class="f-label" for="slug">Tu slug (ej: josetatto)</label>
-        <div class="f-input-wrap">
-          <span class="f-input-prefix">tatua.co/</span>
-          <input
-            id="slug"
-            class="f-input f-input--prefixed"
-            type="text"
-            placeholder="josetatto"
-            autocomplete="username"
-            [(ngModel)]="form.slug"
-            (keydown)="onKeydown($event)"
-          />
-        </div>
+        <label class="f-label" for="email">Correo electrónico</label>
+        <input
+          id="email"
+          class="f-input"
+          type="email"
+          placeholder="tu@correo.com"
+          autocomplete="email"
+          [(ngModel)]="form.email"
+          (keydown)="onKeydown($event)"
+        />
       </div>
 
       <!-- Password -->
@@ -52,14 +49,20 @@
             [(ngModel)]="form.password"
             (keydown)="onKeydown($event)"
           />
-          <button class="f-input-toggle" type="button" (click)="showPass.update(v => !v)" aria-label="Mostrar contraseña">
-            <svg *ngIf="!showPass()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px">
+          <button class="f-input-toggle" type="button"
+            (click)="showPass.update(v => !v)"
+            aria-label="Mostrar contraseña">
+            <svg *ngIf="!showPass()" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
-            <svg *ngIf="showPass()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <svg *ngIf="showPass()" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8
+                a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8
+                a18.5 18.5 0 0 1-2.16 3.19"/>
               <line x1="1" y1="1" x2="23" y2="23"/>
             </svg>
           </button>
@@ -85,12 +88,12 @@
 
   </div>
 
-  <!-- Decorative bg -->
   <div class="auth-page__deco" aria-hidden="true">
     <svg viewBox="0 0 500 500" fill="none">
       <circle cx="250" cy="250" r="200" stroke="#C9A227" stroke-opacity=".04" stroke-width="1"/>
       <circle cx="250" cy="250" r="150" stroke="#C9A227" stroke-opacity=".03" stroke-width="1"/>
-      <path d="M250 50 L460 370 L40 370 Z" stroke="#C9A227" stroke-opacity=".025" stroke-width=".8" fill="none"/>
+      <path d="M250 50 L460 370 L40 370 Z" stroke="#C9A227"
+        stroke-opacity=".025" stroke-width=".8" fill="none"/>
     </svg>
   </div>
 

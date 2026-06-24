@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://trucklogix.onrender.com'
+  apiUrl: 'https://tatuaback.onrender.com/api/v1'
 };

@@ -98,11 +98,23 @@
         </p>
       </div>
 
-      <!-- ── PAYMENT METHODS ──────────────────────────────── -->
+      <!-- ── PAYMENT METHODS — datos del artista ─────────── -->
       <div class="pay-section">
-        <p class="pay-section__title">Elige el método de pago</p>
+        <p class="pay-section__title">Elige cómo pagar el anticipo</p>
 
-        <div class="pay-methods">
+        <!-- Loading -->
+        <div class="pay-loading" *ngIf="pmLoading()">
+          <span>Cargando métodos de pago...</span>
+        </div>
+
+        <!-- Sin métodos configurados -->
+        <div class="pay-empty" *ngIf="!pmLoading() && payMethods().length === 0">
+          <p>El artista aún no ha configurado métodos de pago.</p>
+          <p>Escríbele por WhatsApp para coordinar el anticipo.</p>
+        </div>
+
+        <!-- Métodos del artista -->
+        <div class="pay-methods" *ngIf="!pmLoading() && payMethods().length > 0">
           <button
             class="pay-method"
             *ngFor="let m of payMethods()"
@@ -115,11 +127,7 @@
               <strong>{{ m.name }}</strong>
               <span>{{ m.detail }}</span>
             </div>
-            <span
-              class="pay-method__check"
-              *ngIf="selectedMethod() === m.id"
-              aria-hidden="true"
-            >✓</span>
+            <span class="pay-method__check" *ngIf="selectedMethod() === m.id">✓</span>
           </button>
         </div>
       </div>

@@ -1128,3 +1128,200 @@
     }
   }
 }
+
+// ── Payment methods editor ────────────────────────
+.pm-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pm-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--t) var(--ease);
+
+  &:last-child { border-bottom: none; }
+  &--dirty { background: rgba(201,162,39,.03); }
+
+  &__fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: .75rem;
+    align-items: end;
+
+    @media (max-width: 600px) { grid-template-columns: 1fr; }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-shrink: 0;
+    padding-bottom: 2px;
+  }
+
+  &__dirty {
+    font-size: .65rem;
+    color: var(--gold);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+// ── Profile editor ────────────────────────────────
+
+// Hero image section
+.profile-hero-section {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  align-items: start;
+
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+
+.profile-hero-preview {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.profile-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-hero-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  color: var(--text-dim);
+  font-size: .75rem;
+}
+
+.profile-hero-new {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(201,162,39,.9);
+  color: var(--bg);
+  font-size: .65rem;
+  font-weight: 700;
+  text-align: center;
+  padding: .3rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.profile-hero-controls { display: flex; flex-direction: column; justify-content: center; }
+
+// Profile form
+.profile-form {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+
+    @media (max-width: 600px) { grid-template-columns: 1fr; }
+  }
+}
+
+// Prefix with icon
+.f-prefix-icon {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.f-input--icon  { padding-left: 36px !important; }
+.f-input--sm-prefix { padding-left: 46px !important; }
+
+.f-prefix-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.f-prefix {
+  position: absolute;
+  left: 11px;
+  font-size: .82rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+// Social grid
+.profile-socials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+
+// Social labels with colors
+.social-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  &--ig::before { background: #E1306C; }
+  &--fb::before { background: #1877F2; }
+  &--tk::before { background: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.3); }
+}
+
+// ── Logout button ─────────────────────────────────
+.sidebar__logout {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: 100%;
+  padding: .6rem .75rem;
+  margin-top: .4rem;
+  background: none;
+  border: 1px solid rgba(231,76,60,.2);
+  border-radius: var(--r);
+  color: rgba(231,76,60,.6);
+  font-family: var(--font-body);
+  font-size: .75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+
+  &:hover {
+    background: rgba(231,76,60,.08);
+    border-color: rgba(231,76,60,.4);
+    color: #e74c3c;
+  }
+}

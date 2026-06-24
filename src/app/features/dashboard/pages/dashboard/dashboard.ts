@@ -17,7 +17,7 @@ import {
 } from '../../../../core/models/dashboard.models';
 
 // ── Types ─────────────────────────────────────────────────────
-type DashSection = 'overview' | 'bookings' | 'calendar' | 'payments' | 'services' | 'portfolio';
+type DashSection = 'overview' | 'bookings' | 'calendar' | 'payments' | 'services' | 'portfolio' | 'payment-methods' | 'profile';
 
 export interface ServiceItem {
   id:            number | null;  // null = new (not saved yet)
@@ -29,6 +29,30 @@ export interface ServiceItem {
   sort_order:    number;
   is_active:     boolean;
   isDirty?:      boolean;        // unsaved changes
+}
+
+export interface PaymentMethodItem {
+  id:        number | null;
+  name:      string;
+  detail:    string;
+  is_active: boolean;
+  isDirty?:  boolean;
+}
+
+
+export interface ArtistProfile {
+  name:         string;
+  handle:       string;
+  slug:         string;
+  bio:          string;
+  tagline:      string;
+  whatsapp:     string;
+  instagram:    string;
+  facebook:     string;
+  tiktok:       string;
+  year_started: number | null;
+  city_id:      number | null;
+  hero_image_url: string | null;
 }
 
 export interface PortfolioItem {
@@ -157,6 +181,26 @@ export class Dashboard implements OnInit, OnDestroy {
 
   readonly maxPortfolio = MAX_PORTFOLIO;
 
+  // ── Payment Methods ───────────────────────────────────────
+  paymentMethods = signal<PaymentMethodItem[]>([]);
+  pmLoading      = signal(false);
+  pmSaving       = signal(false);
+
+  // ── Artist Profile ────────────────────────────────────────
+  profileForm    = signal<ArtistProfile>({
+    name: '', handle: '', slug: '', bio: '', tagline: '',
+    whatsapp: '', instagram: '', facebook: '', tiktok: '',
+    year_started: null, city_id: null, hero_image_url: null,
+  });
+  profileLoading  = signal(false);
+  profileSaving   = signal(false);
+  profileDirty    = signal(false);
+  cities          = signal<{ id: number; name: string }[]>([]);
+  heroFile        = signal<File | null>(null);
+  heroPreview     = signal<string | null>(null);
+  // pmLoading      = signal(false);
+  // pmSaving       = signal(false);
+
   get portfolioCount(): number { return this.portfolio().length; }
   get portfolioFull():  boolean { return this.portfolioCount >= MAX_PORTFOLIO; }
 
@@ -188,8 +232,10 @@ export class Dashboard implements OnInit, OnDestroy {
   goTo(section: DashSection): void {
     this.activeSection.set(section);
     this.sidebarOpen.set(false);
-    if (section === 'services'  && this.services().length  === 0) this.loadServices();
-    if (section === 'portfolio' && this.portfolio().length === 0) this.loadPortfolio();
+    if (section === 'services'        && this.services().length       === 0) this.loadServices();
+    if (section === 'portfolio'       && this.portfolio().length      === 0) this.loadPortfolio();
+    if (section === 'payment-methods' && this.paymentMethods().length === 0) this.loadPaymentMethods();
+    if (section === 'profile') this.loadProfile();
   }
 
   // ── Bookings ───────────────────────────────────────────────
@@ -493,6 +539,202 @@ export class Dashboard implements OnInit, OnDestroy {
         this.showToast('Error parcial', `${failed} imagen(es) no se pudieron subir.`, 'error');
       }
     });
+  }
+
+
+  // ── PAYMENT METHODS ────────────────────────────────────────
+
+  loadPaymentMethods(): void {
+    this.pmLoading.set(true);
+    this.api.get<any[]>('/payment-methods', { artist_id: String(this.artist.id) }).subscribe({
+      next: (list) => {
+        // Only show artist-specific methods (artist_id !== null)
+        this.paymentMethods.set(
+          list
+            .filter((m: any) => m.artist_id === this.artist.id)
+            .map((m: any) => ({
+              id:        m.id,
+              name:      m.name,
+              detail:    m.detail ?? '',
+              is_active: m.is_active,
+            }))
+        );
+        this.pmLoading.set(false);
+      },
+      error: () => { this.pmLoading.set(false); },
+    });
+  }
+
+  addPaymentMethod(): void {
+    this.paymentMethods.update(list => [
+      ...list,
+      { id: null, name: 'Nequi', detail: '', is_active: true, isDirty: true },
+    ]);
+  }
+
+  markPmDirty(index: number): void {
+    this.paymentMethods.update(list =>
+      list.map((m, i) => i === index ? { ...m, isDirty: true } : m)
+    );
+  }
+
+  removePaymentMethod(index: number): void {
+    const m = this.paymentMethods()[index];
+    if (m.id) {
+      this.api.delete(`/payment-methods/${m.id}`).subscribe({
+        next:  () => this.paymentMethods.update(list => list.filter((_, i) => i !== index)),
+        error: () => this.showToast('Error', 'No se pudo eliminar.', 'error'),
+      });
+    } else {
+      this.paymentMethods.update(list => list.filter((_, i) => i !== index));
+    }
+  }
+
+  savePaymentMethods(): void {
+    const dirty = this.paymentMethods().filter(m => m.isDirty);
+    if (dirty.length === 0) return;
+
+    this.pmSaving.set(true);
+
+    const saves = dirty.map(m => {
+      const payload = { name: m.name, detail: m.detail };
+      if (m.id) {
+        return this.api.put(`/payment-methods/${m.id}`, payload).toPromise();
+      } else {
+        return this.api.post<any>('/payment-methods', payload).toPromise()
+          .then((created: any) => {
+            this.paymentMethods.update(list =>
+              list.map(item => item === m ? { ...item, id: created.id, isDirty: false } : item)
+            );
+          });
+      }
+    });
+
+    Promise.allSettled(saves).then(results => {
+      this.pmSaving.set(false);
+      const failed = results.filter(r => r.status === 'rejected').length;
+      if (failed === 0) {
+        this.paymentMethods.update(list => list.map(m => ({ ...m, isDirty: false })));
+        this.showToast('Guardado', 'Métodos de pago actualizados.', 'success');
+      } else {
+        this.showToast('Error', 'Algunos métodos no se pudieron guardar.', 'error');
+      }
+    });
+  }
+
+
+  // ── PROFILE ────────────────────────────────────────────────
+
+  loadProfile(): void {
+    this.profileLoading.set(true);
+    this.api.get<any>(`/artists/${this.artist.id}`).subscribe({
+      next: (data) => {
+        this.profileForm.set({
+          name:           data.name          ?? '',
+          handle:         data.handle        ?? '',
+          slug:           data.slug          ?? '',
+          bio:            data.bio           ?? '',
+          tagline:        data.tagline       ?? '',
+          whatsapp:       data.whatsapp      ?? '',
+          instagram:      data.instagram     ?? '',
+          facebook:       data.facebook      ?? '',
+          tiktok:         data.tiktok        ?? '',
+          year_started:   data.year_started  ?? null,
+          city_id:        data.city_id       ?? null,
+          hero_image_url: data.hero_image_url ?? null,
+        });
+        this.profileLoading.set(false);
+      },
+      error: () => {
+        this.profileLoading.set(false);
+        this.showToast('Error', 'No se pudo cargar el perfil.', 'error');
+      },
+    });
+
+    // Load cities if not loaded yet
+    if (this.cities().length === 0) {
+      this.api.get<any[]>('/cities').subscribe({
+        next:  c => this.cities.set(c),
+        error: () => {},
+      });
+    }
+  }
+
+  updateProfile(field: keyof ArtistProfile, value: any): void {
+    this.profileForm.update(f => ({ ...f, [field]: value }));
+    this.profileDirty.set(true);
+  }
+
+  saveProfile(): void {
+    this.profileSaving.set(true);
+    const form = this.profileForm();
+
+    this.api.put<any>(`/artists/${this.artist.id}`, {
+      name:         form.name        || undefined,
+      handle:       form.handle      || undefined,
+      bio:          form.bio         || null,
+      tagline:      form.tagline     || null,
+      whatsapp:     form.whatsapp    || null,
+      instagram:    form.instagram   || null,
+      facebook:     form.facebook    || null,
+      tiktok:       form.tiktok      || null,
+      year_started: form.year_started || null,
+      city_id:      form.city_id     || undefined,
+    }).subscribe({
+      next: () => {
+        this.profileSaving.set(false);
+        this.profileDirty.set(false);
+        this.showToast('Guardado', 'Perfil actualizado correctamente.', 'success');
+      },
+      error: () => {
+        this.profileSaving.set(false);
+        this.showToast('Error', 'No se pudo guardar el perfil.', 'error');
+      },
+    });
+  }
+
+  onHeroChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    this.heroFile.set(file);
+    const reader = new FileReader();
+    reader.onload = e => this.heroPreview.set(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  uploadHero(): void {
+    const file = this.heroFile();
+    if (!file) return;
+    this.profileSaving.set(true);
+    const fd = new FormData();
+    fd.append('image', file);
+    this.api.post<any>('/upload/hero', fd).subscribe({
+      next: (res) => {
+        this.profileSaving.set(false);
+        this.profileForm.update(f => ({ ...f, hero_image_url: res.hero_image_url }));
+        this.heroFile.set(null);
+        this.heroPreview.set(null);
+        this.showToast('Foto actualizada', 'La imagen de fondo fue subida.', 'success');
+      },
+      error: () => {
+        this.profileSaving.set(false);
+        this.showToast('Error', 'No se pudo subir la imagen.', 'error');
+      },
+    });
+  }
+
+  removeHeroPreview(): void {
+    this.heroFile.set(null);
+    this.heroPreview.set(null);
+  }
+
+  get currentYear(): number { return new Date().getFullYear(); }
+  get yearOptions(): number[] {
+    return Array.from({ length: 30 }, (_, i) => this.currentYear - i);
+  }
+
+  logout(): void {
+    this.auth.logout();
   }
 
   // ── Helpers ────────────────────────────────────────────────

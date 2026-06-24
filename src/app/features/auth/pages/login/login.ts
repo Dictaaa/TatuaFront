@@ -18,14 +18,14 @@ export class Login {
   private router = inject(Router);
   private route  = inject(ActivatedRoute);
 
-  form = { slug: '', password: '' };
+  form = { email: '', password: '' };
 
   isLoading = signal(false);
   errorMsg  = signal<string | null>(null);
   showPass  = signal(false);
 
   submit(): void {
-    if (!this.form.slug || !this.form.password) {
+    if (!this.form.email || !this.form.password) {
       this.errorMsg.set('Por favor completa todos los campos.');
       return;
     }
@@ -33,7 +33,10 @@ export class Login {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.auth.login(this.form).subscribe({
+    this.auth.login({
+      email:    this.form.email,
+      password: this.form.password,
+    }).subscribe({
       next: () => {
         this.isLoading.set(false);
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/dashboard';

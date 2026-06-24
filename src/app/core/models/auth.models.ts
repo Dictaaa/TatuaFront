@@ -1,9 +1,5 @@
-// ============================================================
-// TATUA · Auth Interfaces
-// ============================================================
-
 export interface LoginDto {
-  slug:     string;
+  email:    string;   // changed from slug to email
   password: string;
 }
 
@@ -21,6 +17,7 @@ export interface AuthArtist {
   id:     number;
   name:   string;
   slug:   string;
+  email:  string;
   handle: string;
 }
 

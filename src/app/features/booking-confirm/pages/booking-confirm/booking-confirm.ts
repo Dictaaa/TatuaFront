@@ -53,6 +53,7 @@ export class BookingConfirm implements OnInit {
 
   // UI state
   isLoading    = signal(false);
+  pmLoading    = signal(false);
   errorMsg     = signal<string | null>(null);
   dragOver     = signal(false);
 
@@ -64,35 +65,48 @@ export class BookingConfirm implements OnInit {
       this.bookingId.set(+id);
       this.loadBooking(+id);
     }
-    this.loadPaymentMethods();
+    // Payment methods are loaded after booking is fetched (need artist_id)
   }
 
   // ── Loaders ───────────────────────────────────────────────
   private loadBooking(id: number): void {
     this.svc.getBooking(id).subscribe({
-      next:  b   => this.booking.set(b),
+      next: (b) => {
+        this.booking.set(b);
+        // Load this artist's specific payment methods
+        if (b?.artist?.id) this.loadPaymentMethods(b.artist.id);
+      },
       error: ()  => this.errorMsg.set('No se encontró la cita. Verifica el enlace.'),
     });
   }
 
-  private loadPaymentMethods(): void {
-    this.api.get<any[]>(ENDPOINTS.catalogs.paymentMethods).subscribe({
-      next: methods => this.payMethods.set(
-        methods.map(m => ({
-          id:     m.id,
-          name:   m.name,
-          detail: m.detail ?? '',
-          icon:   this.methodIcon(m.name),
-        }))
-      ),
+  private loadPaymentMethods(artistId?: number): void {
+    this.pmLoading.set(true);
+    const params: Record<string, string> | undefined = artistId
+      ? { artist_id: String(artistId) }
+      : undefined;
+
+    this.api.get<any[]>(ENDPOINTS.catalogs.paymentMethods, params).subscribe({
+      next: methods => {
+        this.pmLoading.set(false);
+        // Filter to only artist-specific methods if available
+        const artistMethods = methods.filter((m: any) => m.artist_id === artistId);
+        const toShow = artistMethods.length > 0 ? artistMethods : methods;
+
+        this.payMethods.set(
+          toShow.map((m: any) => ({
+            id:     m.id,
+            name:   m.name,
+            detail: m.detail ?? '',
+            icon:   this.methodIcon(m.name),
+          }))
+        );
+        // Auto-select first method
+        if (toShow.length > 0) this.selectedMethod.set(toShow[0].id);
+      },
       error: () => {
-        // Fallback hardcoded methods
-        this.payMethods.set([
-          { id:1, name:'Bancolombia',  detail:'Ahorros · 678-000099-64',  icon:'🏦' },
-          { id:2, name:'Nequi',        detail:'311 675 5857',              icon:'📱' },
-          { id:3, name:'Daviplata',    detail:'311 675 5857',              icon:'📱' },
-          { id:4, name:'Datáfono',     detail:'Pago en el estudio',        icon:'💳' },
-        ]);
+        this.pmLoading.set(false);
+        this.payMethods.set([]);
       },
     });
   }
