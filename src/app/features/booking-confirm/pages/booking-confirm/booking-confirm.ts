@@ -212,7 +212,7 @@ export class BookingConfirm implements OnInit {
 
     const method = this.payMethods().find(m => m.id === this.selectedMethod());
     const msg = encodeURIComponent(
-      `Hola! Acabo de enviar el comprobante de pago para mi cita ${b.booking_number} en TATUA.\n\n` +
+      `Hola! Acabo de enviar el comprobante de pago para mi cita ${b.booking_number} en TATUACO.\n\n` +
       `*Método:* ${method?.name ?? '—'}\n` +
       `*Referencia:* ${this.externalRef() || 'Ver comprobante adjunto'}\n\n` +
       `Quedo pendiente de la confirmación. ¡Gracias!`

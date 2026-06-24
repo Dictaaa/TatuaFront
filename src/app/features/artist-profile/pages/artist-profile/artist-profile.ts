@@ -524,7 +524,7 @@ export class ArtistProfile implements OnInit, OnDestroy {
       : 'Por definir';
 
     const msg = encodeURIComponent(
-      `¡Hola ${a.name}! Acabo de reservar una cita en TATUA 🎨\n\n` +
+      `¡Hola ${a.name}! Acabo de reservar una cita en TATUACO 🎨\n\n` +
       `*Número:* ${bookingNumber}\n` +
       `*Tipo:* ${f.type}\n` +
       `*Nombre:* ${f.name}\n` +
@@ -532,7 +532,7 @@ export class ArtistProfile implements OnInit, OnDestroy {
       `*Tamaño:* ${f.size}\n` +
       `*Fecha deseada:* ${date}\n` +
       `*Descripción:* ${f.description || '—'}\n\n` +
-      `Enviado desde tatua.co/${a.slug}`
+      `Enviado desde tatuaco.com/${a.slug}`
     );
     window.open(`https://wa.me/${a.whatsapp}?text=${msg}`, '_blank');
   }
